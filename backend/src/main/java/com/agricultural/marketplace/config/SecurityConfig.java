@@ -75,6 +75,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/farmers/public/**").permitAll()
                 // Jobs endpoints (public for viewing)
                 .requestMatchers("/api/jobs", "/api/jobs/*").permitAll()
+                // Users list by role (for messaging - authenticated users only)
+                .requestMatchers("/api/users/by-role").authenticated()
                 // All other requests require authentication
                 .anyRequest().authenticated()
             );

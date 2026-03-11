@@ -12,6 +12,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/api/users")
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -97,4 +100,24 @@ public class UserController {
                     .body(new ApiResponse(false, "Failed to get user: " + e.getMessage()));
         }
     }
-}
+
+    /**
+     * List all farmers (for customers to contact) or all customers (for farmers)
+     * GET /api/users/by-role?role=FARMER  or  ?role=CUSTOMER
+     */
+    @GetMapping("/by-role")
+    public ResponseEntity<?> getUsersByRole(@RequestParam String role) {
+        try {
+            User.UserRole userRole = User.UserRole.valueOf(role.toUpperCase());
+            List<User> users = userService.getUsersByRole(userRole);
+            // Remove passwords
+            users.forEach(u -> u.setPassword(null));
+            return ResponseEntity.ok(users);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse(false, "Rôle invalide: " + role));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse(false, "Erreur: " + e.getMessage()));
+        }
+    }

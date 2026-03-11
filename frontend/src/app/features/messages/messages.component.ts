@@ -28,6 +28,13 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewChecked {
   loading = true;
   sendingMessage = false;
   needsScroll = false;
+
+  // New conversation modal
+  showNewConvModal = false;
+  userSearchQuery = '';
+  userSearchResults: any[] = [];
+  loadingUsers = false;
+  startingConv = false;
   isConnected = false;
   searchQuery = '';
 
@@ -244,5 +251,70 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewChecked {
     const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
     if (d.toDateString() === yesterday.toDateString()) return 'Hier';
     return d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+
+  // ── New conversation modal ────────────────────────────────────────────────
+
+  openNewConvModal() {
+    this.showNewConvModal = true;
+    this.userSearchQuery = '';
+    this.userSearchResults = [];
+    this.loadUsers();
+  }
+
+  closeNewConvModal() {
+    this.showNewConvModal = false;
+    this.userSearchQuery = '';
+    this.userSearchResults = [];
+  }
+
+  loadUsers() {
+    if (!this.currentUser) return;
+    this.loadingUsers = true;
+    // Customer sees farmers, Farmer sees customers
+    const role = this.currentUser.role === UserRole.CUSTOMER ? 'FARMER' : 'CUSTOMER';
+    this.messageService.getUsersByRole(role).subscribe({
+      next: (users) => {
+        this.userSearchResults = users.filter(u => u.id !== this.currentUser!.id);
+        this.loadingUsers = false;
+      },
+      error: () => { this.loadingUsers = false; }
+    });
+  }
+
+  get filteredUsers(): any[] {
+    if (!this.userSearchQuery.trim()) return this.userSearchResults;
+    const q = this.userSearchQuery.toLowerCase();
+    return this.userSearchResults.filter(u =>
+      `${u.firstName} ${u.lastName}`.toLowerCase().includes(q) ||
+      u.email?.toLowerCase().includes(q) ||
+      u.farmerProfile?.farmName?.toLowerCase().includes(q)
+    );
+  }
+
+  startConversation(user: any) {
+    if (!this.currentUser || this.startingConv) return;
+    this.startingConv = true;
+
+    const isCurrentCustomer = this.currentUser.role === UserRole.CUSTOMER;
+    const customerId    = isCurrentCustomer ? this.currentUser.id! : user.id;
+    const customerName  = isCurrentCustomer
+      ? `${this.currentUser.firstName} ${this.currentUser.lastName}`
+      : `${user.firstName} ${user.lastName}`;
+    const farmerId   = isCurrentCustomer ? user.id : this.currentUser.id!;
+    const farmerName = isCurrentCustomer
+      ? `${user.firstName} ${user.lastName}`
+      : `${this.currentUser.firstName} ${this.currentUser.lastName}`;
+
+    this.messageService.createConversation(customerId, customerName, farmerId, farmerName)
+      .subscribe({
+        next: (conv) => {
+          this.startingConv = false;
+          this.closeNewConvModal();
+          this.loadConversations();
+          if (conv) this.selectConversation(conv);
+        },
+        error: () => { this.startingConv = false; }
+      });
   }
 }

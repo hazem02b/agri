@@ -10,10 +10,11 @@ import { environment } from '../../../environments/environment';
 })
 export class MessageService {
   private apiUrl = `${environment.apiUrl}/messages`;
-  
+  private usersApiUrl = `${environment.apiUrl}/users`;
+
   private conversationsSubject = new BehaviorSubject<Conversation[]>([]);
   public conversations$ = this.conversationsSubject.asObservable();
-  
+
   private unreadCountSubject = new BehaviorSubject<number>(0);
   public unreadCount$ = this.unreadCountSubject.asObservable();
 
@@ -167,7 +168,16 @@ export class MessageService {
         }
       });
     });
-    
+
     this.unreadCountSubject.next(count);
+  }
+
+  /**
+   * Get all users by role for starting new conversations
+   */
+  getUsersByRole(role: 'FARMER' | 'CUSTOMER'): Observable<any[]> {
+    return this.http.get<any[]>(`${this.usersApiUrl}/by-role?role=${role}`).pipe(
+      catchError(() => of([]))
+    );
   }
 }

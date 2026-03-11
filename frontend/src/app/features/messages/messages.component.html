@@ -7,9 +7,17 @@
     <div class="px-5 pt-5 pb-3">
       <div class="flex items-center justify-between mb-4">
         <h1 class="text-2xl font-bold text-gray-900">Messages</h1>
-        <span *ngIf="isConnected" class="flex items-center gap-1 text-xs text-green-600 font-medium">
-          <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> En ligne
-        </span>
+        <div class="flex items-center gap-2">
+          <span *ngIf="isConnected" class="flex items-center gap-1 text-xs text-green-600 font-medium">
+            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> En ligne
+          </span>
+          <!-- New Conversation Button -->
+          <button (click)="openNewConvModal()"
+            class="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center hover:bg-green-700 transition text-xl font-bold"
+            title="Nouveau message">
+            +
+          </button>
+        </div>
       </div>
       <!-- Search -->
       <div class="relative">
@@ -34,7 +42,11 @@
          class="flex-1 flex flex-col items-center justify-center p-8 text-center">
       <div class="text-5xl mb-3">💬</div>
       <p class="font-semibold text-gray-700">Aucune conversation</p>
-      <p class="text-sm text-gray-500 mt-1">Commandez un produit pour démarrer une conversation avec un agriculteur.</p>
+      <p class="text-sm text-gray-500 mt-1 mb-4">Cliquez sur <strong>+</strong> pour démarrer une conversation.</p>
+      <button (click)="openNewConvModal()"
+        class="px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition">
+        + Nouveau message
+      </button>
     </div>
 
     <!-- Conversation list -->
@@ -174,5 +186,74 @@
       </div>
     </ng-container>
 
+  </div>
+</div>
+
+<!-- ═══════════════════ MODAL NOUVEAU MESSAGE ═══════════════════ -->
+<div *ngIf="showNewConvModal"
+     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+     (click)="closeNewConvModal()">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden"
+       (click)="$event.stopPropagation()">
+
+    <!-- Modal header -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <h2 class="text-lg font-bold text-gray-900">Nouveau message</h2>
+      <button (click)="closeNewConvModal()" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 text-xl">&times;</button>
+    </div>
+
+    <!-- Search input -->
+    <div class="px-6 py-3 border-b border-gray-100">
+      <div class="relative">
+        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+        <input
+          [(ngModel)]="userSearchQuery"
+          type="text"
+          placeholder="Rechercher par nom ou email..."
+          class="w-full pl-9 pr-4 py-2.5 bg-gray-100 rounded-xl text-sm border-0 focus:outline-none focus:ring-2 focus:ring-green-500"
+          autofocus
+        />
+      </div>
+    </div>
+
+    <!-- User list -->
+    <div class="overflow-y-auto max-h-80">
+      <!-- Loading -->
+      <div *ngIf="loadingUsers" class="flex justify-center items-center py-10">
+        <div class="w-6 h-6 border-2 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+
+      <!-- Empty -->
+      <div *ngIf="!loadingUsers && filteredUsers.length === 0" class="text-center py-10 text-gray-500">
+        <div class="text-4xl mb-2">🔍</div>
+        <p class="text-sm">Aucun utilisateur trouvé</p>
+      </div>
+
+      <!-- Users -->
+      <div *ngFor="let user of filteredUsers"
+           (click)="startConversation(user)"
+           class="flex items-center gap-3 px-6 py-3 cursor-pointer hover:bg-gray-50 transition border-b border-gray-50 last:border-0">
+        <!-- Avatar -->
+        <div class="w-11 h-11 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+          {{ (user.firstName || '?').charAt(0).toUpperCase() }}
+        </div>
+        <!-- Info -->
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-gray-900 text-sm">{{ user.firstName }} {{ user.lastName }}</p>
+          <p class="text-xs text-gray-500 truncate">
+            <span *ngIf="user.farmerProfile?.farmName" class="text-green-600">🌱 {{ user.farmerProfile.farmName }}  · </span>
+            {{ user.email }}
+          </p>
+        </div>
+        <!-- Start chat icon -->
+        <span class="text-green-600 text-sm font-medium">💬</span>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div *ngIf="startingConv" class="px-6 py-3 text-center text-sm text-gray-500">
+      <div class="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin inline-block mr-2"></div>
+      Création de la conversation...
+    </div>
   </div>
 </div>

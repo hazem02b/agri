@@ -133,7 +133,7 @@ export class ProductDetailComponent implements OnInit {
       this.product.name
     ).subscribe({
       next: () => {
-        this.router.navigate(['/chat']);
+        this.router.navigate(['/messages']);
         this.toastService.success('Redirection vers la messagerie');
       },
       error: () => {
