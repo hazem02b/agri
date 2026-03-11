@@ -1,0 +1,1042 @@
+<div class="flex min-h-screen bg-gray-50">
+  <!-- Sidebar - Design Figma -->
+  <aside class="w-64 bg-green-600 text-white flex-shrink-0 fixed h-full">
+    <!-- Logo -->
+    <div class="p-6 border-b border-green-500">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+          <span class="text-2xl">🌾</span>
+        </div>
+        <div>
+          <div class="font-bold text-lg">Agri-Manager</div>
+          <div class="text-xs text-green-100">{{ currentUser?.farmerProfile?.farmName || 'Ma Ferme' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="p-4">
+      <button (click)="changeSection('overview')" 
+        [class.bg-green-700]="currentSection === 'overview'"
+        [class.text-white]="currentSection === 'overview'"
+        [class.text-green-50]="currentSection !== 'overview'"
+        class="w-full flex items-center gap-3 px-4 py-3 hover:bg-green-700 rounded-lg mb-1 hover:text-white transition-colors font-medium">
+        <span class="text-lg">📊</span>
+        <span>Vue d'ensemble</span>
+      </button>
+      
+      <button (click)="changeSection('products')"
+        [class.bg-green-700]="currentSection === 'products'"
+        [class.text-white]="currentSection === 'products'"
+        [class.text-green-50]="currentSection !== 'products'"
+        class="w-full flex items-center gap-3 px-4 py-3 hover:bg-green-700 rounded-lg mb-1 hover:text-white transition-colors">
+        <span class="text-lg">📦</span>
+        <span>Mes Produits</span>
+      </button>
+      
+      <button (click)="changeSection('orders')"
+        [class.bg-green-700]="currentSection === 'orders'"
+        [class.text-white]="currentSection === 'orders'"
+        [class.text-green-50]="currentSection !== 'orders'"
+        class="w-full flex items-center gap-3 px-4 py-3 hover:bg-green-700 rounded-lg mb-1 hover:text-white transition-colors">
+        <span class="text-lg">🛒</span>
+        <span>Commandes</span>
+      </button>
+      
+      <button (click)="changeSection('messages')"
+        [class.bg-green-700]="currentSection === 'messages'"
+        [class.text-white]="currentSection === 'messages'"
+        [class.text-green-50]="currentSection !== 'messages'"
+        class="w-full flex items-center gap-3 px-4 py-3 hover:bg-green-700 rounded-lg mb-1 hover:text-white transition-colors relative">
+        <span class="text-lg">💬</span>
+        <span>Messagerie</span>
+        <span class="absolute right-3 top-3 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">8</span>
+      </button>
+      
+      <button (click)="changeSection('logistics')"
+        [class.bg-green-700]="currentSection === 'logistics'"
+        [class.text-white]="currentSection === 'logistics'"
+        [class.text-green-50]="currentSection !== 'logistics'"
+        class="w-full flex items-center gap-3 px-4 py-3 hover:bg-green-700 rounded-lg mb-1 hover:text-white transition-colors">
+        <span class="text-lg">🚚</span>
+        <span>Logistique</span>
+      </button>
+      
+      <button (click)="changeSection('recruitment')"
+        [class.bg-green-700]="currentSection === 'recruitment'"
+        [class.text-white]="currentSection === 'recruitment'"
+        [class.text-green-50]="currentSection !== 'recruitment'"
+        class="w-full flex items-center gap-3 px-4 py-3 hover:bg-green-700 rounded-lg mb-1 hover:text-white transition-colors">
+        <span class="text-lg">👥</span>
+        <span>Recrutement</span>
+      </button>
+      
+      <button (click)="changeSection('payments')"
+        [class.bg-green-700]="currentSection === 'payments'"
+        [class.text-white]="currentSection === 'payments'"
+        [class.text-green-50]="currentSection !== 'payments'"
+        class="w-full flex items-center gap-3 px-4 py-3 hover:bg-green-700 rounded-lg mb-1 hover:text-white transition-colors">
+        <span class="text-lg">💰</span>
+        <span>Paiements</span>
+      </button>
+      
+      <button (click)="changeSection('settings')"
+        [class.bg-green-700]="currentSection === 'settings'"
+        [class.text-white]="currentSection === 'settings'"
+        [class.text-green-50]="currentSection !== 'settings'"
+        class="w-full flex items-center gap-3 px-4 py-3 hover:bg-green-700 rounded-lg mb-1 hover:text-white transition-colors">
+        <span class="text-lg">⚙️</span>
+        <span>Paramètres</span>
+      </button>
+
+      <button (click)="changeSection('profile')"
+        [class.bg-green-700]="currentSection === 'profile'"
+        [class.text-white]="currentSection === 'profile'"
+        [class.text-green-50]="currentSection !== 'profile'"
+        class="w-full flex items-center gap-3 px-4 py-3 hover:bg-green-700 rounded-lg mb-1 hover:text-white transition-colors">
+        <span class="text-lg">👤</span>
+        <span>Mon Profil</span>
+      </button>
+    </nav>
+
+    <!-- User Profile at Bottom -->
+    <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-green-500">
+      <div class="flex items-center gap-3 px-4 py-3 hover:bg-green-700 rounded-lg cursor-pointer">
+        <div class="w-10 h-10 bg-green-700 rounded-full flex items-center justify-center font-bold">
+          {{ (currentUser?.firstName?.charAt(0) || 'A') + (currentUser?.lastName?.charAt(0) || 'B') }}
+        </div>
+        <div class="flex-1">
+          <div class="font-medium text-sm">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</div>
+          <div class="text-xs text-green-200">Agriculteur</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 ml-64">
+    
+    <!-- OVERVIEW SECTION -->
+    <div *ngIf="currentSection === 'overview'">
+    <!-- Header -->
+    <div class="bg-white border-b border-gray-200 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">Vue d'ensemble</h1>
+          <p class="text-sm text-gray-500">Bienvenue, {{ currentUser?.firstName }}! Voici un aperçu de votre activité.</p>
+        </div>
+        <div>
+          <button routerLink="/farmer-dashboard/add-product" class="inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+            <span class="text-lg">➕</span>
+            <span>Ajouter un produit</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="px-6 py-6">
+    <!-- Stats Grid - Design Figma -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+      <!-- Revenue Card -->
+      <div class="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+            <span class="text-2xl">💵</span>
+          </div>
+          <span class="text-xs text-green-600 font-semibold">+12.5%</span>
+        </div>
+        <div class="text-2xl font-bold text-gray-900 mb-1">{{ stats.totalRevenue | number:'1.0-0' }} TND</div>
+        <div class="text-sm text-gray-500">Revenus du mois</div>
+      </div>
+
+      <!-- Orders Card -->
+      <div class="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+            <span class="text-2xl">📦</span>
+          </div>
+          <span class="text-xs text-green-600 font-semibold">+3</span>
+        </div>
+        <div class="text-2xl font-bold text-gray-900 mb-1">{{ stats.ordersThisMonth }}</div>
+        <div class="text-sm text-gray-500">Commandes en cours</div>
+      </div>
+
+      <!-- Products Card -->
+      <div class="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+            <span class="text-2xl">📁</span>
+          </div>
+          <span class="text-xs text-green-600 font-semibold">+2</span>
+        </div>
+        <div class="text-2xl font-bold text-gray-900 mb-1">{{ stats.totalProducts }}</div>
+        <div class="text-sm text-gray-500">Produits actifs</div>
+      </div>
+
+      <!-- Messages Card -->
+      <div class="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-md transition-shadow relative">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+            <span class="text-2xl">💬</span>
+          </div>
+          <span class="absolute top-3 right-3 text-xs text-blue-600 font-semibold">nouveau</span>
+        </div>
+        <div class="text-2xl font-bold text-gray-900 mb-1">8</div>
+        <div class="text-sm text-gray-500">Messages non lus</div>
+      </div>
+    </div>
+
+    <!-- Stock Alerts - Design Figma -->
+    <div *ngIf="stats.lowStock > 0 || stats.outOfStock > 0" class="mb-8 space-y-3">
+      <div *ngIf="stats.lowStock > 0" class="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-4 flex items-center gap-3">
+        <span class="text-2xl">⚠️</span>
+        <div class="flex-1">
+          <div class="font-semibold text-yellow-900">Stock faible !</div>
+          <div class="text-sm text-yellow-700">{{ stats.lowStock }} produit{{ stats.lowStock > 1 ? 's ont' : ' a' }} un stock faible</div>
+        </div>
+        <button (click)="setFilter('low-stock')" class="text-sm text-yellow-700 hover:text-yellow-900 font-medium">
+          Voir →
+        </button>
+      </div>
+      
+      <div *ngIf="stats.outOfStock > 0" class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4 flex items-center gap-3">
+        <span class="text-2xl">❌</span>
+        <div class="flex-1">
+          <div class="font-semibold text-red-900">Rupture de stock !</div>
+          <div class="text-sm text-red-700">{{ stats.outOfStock }} produit{{ stats.outOfStock > 1 ? 's sont' : ' est' }} en rupture</div>
+        </div>
+        <button (click)="setFilter('out-stock')" class="text-sm text-red-700 hover:text-red-900 font-medium">
+          Voir →
+        </button>
+      </div>
+    </div>
+
+    <!-- Charts Section - Design Figma -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
+      <!-- Sales Chart -->
+      <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <div class="mb-4">
+          <h3 class="text-lg font-bold text-gray-900">Ventes de la semaine</h3>
+          <p class="text-sm text-gray-500">Évolution de vos ventes quotidiennes</p>
+        </div>
+        <div class="relative h-64">
+          <canvas #salesChart></canvas>
+        </div>
+      </div>
+
+      <!-- Top Products Chart -->
+      <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <div class="mb-4">
+          <h3 class="text-lg font-bold text-gray-900">Produits les plus vendus</h3>
+          <p class="text-sm text-gray-500">Top 4 de ce mois</p>
+        </div>
+        <div class="relative h-64">
+          <canvas #productsChart></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Orders Table - Design Figma -->
+    <div class="bg-white rounded-xl border border-gray-200 mb-8">
+      <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+        <div>
+          <h3 class="text-lg font-bold text-gray-900">Commandes récentes</h3>
+        </div>
+        <button class="text-sm text-blue-600 hover:text-blue-700 font-medium">Voir tout</button>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">N° Commande</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Client</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Montant</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Statut</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Date</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <tr *ngFor="let order of recentOrders" class="hover:bg-gray-50 transition-colors">
+              <td class="px-6 py-4 text-sm font-medium text-gray-900">#{{ order.id?.substring(18, 24) || 'N/A' }}</td>
+              <td class="px-6 py-4 text-sm text-gray-700">{{ order.buyerName || 'Client' }}</td>
+              <td class="px-6 py-4 text-sm font-semibold text-gray-900">{{ order.totalAmount | number:'1.2-2' }} TND</td>
+              <td class="px-6 py-4 text-sm">
+                <span *ngIf="order.status === 'PENDING'" class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">
+                  En attente
+                </span>
+                <span *ngIf="order.status === 'CONFIRMED'" class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                  Confirmée
+                </span>
+                <span *ngIf="order.status === 'PROCESSING'" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                  En préparation
+                </span>
+                <span *ngIf="order.status === 'SHIPPED'" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium">
+                  Expédiée
+                </span>
+                <span *ngIf="order.status === 'DELIVERED'" class="px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-xs font-medium">
+                  Livrée
+                </span>
+                <span *ngIf="order.status === 'CANCELLED'" class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
+                  Annulée
+                </span>
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-500">{{ order.createdAt | date:'dd/MM/yyyy' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Products Section - Design Figma -->
+    <div class="bg-white rounded-lg shadow border border-gray-200">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-bold text-gray-900">Mes Produits</h2>
+            <p class="text-sm text-gray-500 mt-1">Gérez votre catalogue de produits</p>
+          </div>
+          
+          <!-- Filters -->
+          <div class="flex gap-2">
+            <button 
+              (click)="setFilter('all')" 
+              [class]="currentFilter === 'all' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+              class="px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              Tous ({{ products.length }})
+            </button>
+            <button 
+              (click)="setFilter('low-stock')" 
+              [class]="currentFilter === 'low-stock' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+              class="px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              Stock Bas ({{ stats.lowStock }})
+            </button>
+            <button 
+              (click)="setFilter('out-stock')" 
+              [class]="currentFilter === 'out-stock' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+              class="px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              Rupture ({{ stats.outOfStock }})
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-6">
+        <!-- Loading State -->
+        <div *ngIf="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <app-skeleton *ngFor="let i of [1,2,3,4,5,6]" type="card"></app-skeleton>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!loading && filteredProducts.length === 0" class="text-center py-16">
+          <div class="text-6xl mb-4">📭</div>
+          <div class="text-lg font-semibold text-gray-900 mb-2">Aucun produit trouvé</div>
+          <div class="text-gray-500 mb-6">Commencez par ajouter votre premier produit</div>
+          <button routerLink="/farmer-dashboard/add-product" class="inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+            <span>➕</span>
+            <span>Ajouter un produit</span>
+          </button>
+        </div>
+
+        <!-- Products Grid -->
+        <div *ngIf="!loading && filteredProducts.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div *ngFor="let product of filteredProducts" 
+               class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+            <!-- Product Image -->
+            <div class="relative h-48 bg-gray-100">
+              <img *ngIf="product.images && product.images.length > 0" 
+                   [src]="product.images[0]" 
+                   [alt]="product.name"
+                   class="w-full h-full object-cover">
+              <div *ngIf="!product.images || product.images.length === 0" 
+                   class="w-full h-full flex items-center justify-center text-6xl">
+                🌾
+              </div>
+              
+              <!-- Stock Badge -->
+              <div class="absolute top-3 right-3">
+                <span *ngIf="product.stock <= 5 && product.stock > 0"
+                      class="px-2 py-1 bg-orange-500 text-white rounded text-xs font-semibold">
+                  Stock faible
+                </span>
+                <span *ngIf="product.stock === 0"
+                      class="px-2 py-1 bg-red-500 text-white rounded text-xs font-semibold">
+                  Rupture
+                </span>
+                <span *ngIf="product.stock > 5"
+                      class="px-2 py-1 bg-green-500 text-white rounded text-xs font-semibold">
+                  En stock
+                </span>
+              </div>
+            </div>
+
+            <!-- Product Info -->
+            <div class="p-4">
+              <h3 class="font-bold text-gray-900 mb-2 line-clamp-1">{{ product.name }}</h3>
+              <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ product.description }}</p>
+              
+              <div class="flex items-center justify-between mb-3">
+                <div>
+                  <div class="text-2xl font-bold text-green-600">{{ product.price | number:'1.2-2' }} TND</div>
+                  <div class="text-xs text-gray-500">Stock: {{ product.stock }} {{ product.unit }}</div>
+                </div>
+              </div>
+
+              <!-- Actions -->
+              <div class="flex gap-2">
+                <button class="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm font-medium">
+                  <span>✏️</span>
+                  <span>Modifier</span>
+                </button>
+                <button class="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors text-sm font-medium">
+                  <span>👁️</span>
+                  <span>Voir</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+    </div><!-- Fin OVERVIEW SECTION -->
+
+    <!-- SECTION PRODUCTS -->
+    <div *ngIf="currentSection === 'products'">
+      <div class="bg-white border-b border-gray-200 px-6 py-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900">Mes Produits</h1>
+            <p class="text-sm text-gray-500">Gérez votre catalogue de produits</p>
+          </div>
+          <button routerLink="/farmer-dashboard/add-product" class="inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+            <span class="text-lg">➕</span>
+            <span>Ajouter un produit</span>
+          </button>
+        </div>
+      </div>
+      <div class="p-6">
+        <div class="mb-6">
+          <input type="text" placeholder="🔍 Rechercher un produit..." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"/>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div *ngFor="let product of products" class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+            <div class="relative h-48 bg-gray-100">
+              <img *ngIf="product.images?.length" [src]="product.images[0]" [alt]="product.name" class="w-full h-full object-cover">
+              <div *ngIf="!product.images?.length" class="w-full h-full flex items-center justify-center text-6xl">🌾</div>
+              <span *ngIf="product.stock && product.stock < 10" class="absolute top-3 right-3 px-2 py-1 bg-red-500 text-white rounded text-xs font-semibold">Stock bas</span>
+            </div>
+            <div class="p-4">
+              <h3 class="font-bold text-gray-900 mb-2">{{ product.name }}</h3>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-2xl font-bold text-green-600">{{ product.price | number:'1.2-2' }} TND</span>
+                <span class="text-sm text-gray-500">Stock: {{ product.stock }} {{ product.unit }}</span>
+              </div>
+              <div class="bg-gray-200 rounded-full h-2 mb-3">
+                <div class="bg-green-600 h-2 rounded-full" [style.width.%]="(product.stock / 100) * 100"></div>
+              </div>
+              <div class="flex gap-2">
+                <button class="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm font-medium">✏️ Modifier</button>
+                <button class="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm font-medium">👁️ Voir</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION ORDERS -->
+    <div *ngIf="currentSection === 'orders'">
+      <div class="bg-white border-b border-gray-200 px-6 py-4">
+        <h1 class="text-2xl font-bold text-gray-900">Gestion des Commandes</h1>
+        <p class="text-sm text-gray-500">Suivez et gérez toutes vos commandes</p>
+      </div>
+      <div class="p-6">
+        <div class="bg-white rounded-lg border border-gray-200">
+          <div class="border-b border-gray-200 px-4 py-3">
+            <div class="flex gap-2">
+              <button class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium">Toutes</button>
+              <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Nouvelles</button>
+              <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">En préparation</button>
+              <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Prêtes</button>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">N° Commande</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Client</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Produits</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Montant</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Livraison</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Statut</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <tr *ngFor="let order of recentOrders" class="hover:bg-gray-50">
+                  <td class="px-6 py-4 text-sm font-medium text-gray-900">#{{ order.id?.substring(18, 24) || 'N/A' }}</td>
+                  <td class="px-6 py-4">
+                    <div class="font-medium text-gray-900">{{ order.buyerName || 'Client' }}</div>
+                    <div class="text-sm text-gray-500">{{ order.deliveryAddress?.address || 'Adresse non disponible' }}</div>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-700">{{ order.items?.length || 1 }} produit(s)</td>
+                  <td class="px-6 py-4 text-sm font-semibold text-gray-900">{{ order.totalAmount | number:'1.2-2' }} TND</td>
+                  <td class="px-6 py-4"><span class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">Livraison</span></td>
+                  <td class="px-6 py-4">
+                    <span *ngIf="order.status === 'PENDING'" class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">En attente</span>
+                    <span *ngIf="order.status === 'CONFIRMED'" class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">Confirmée</span>
+                    <span *ngIf="order.status === 'PROCESSING'" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">En préparation</span>
+                    <span *ngIf="order.status === 'SHIPPED'" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium">Expédiée</span>
+                    <span *ngIf="order.status === 'DELIVERED'" class="px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-xs font-medium">Livrée</span>
+                    <span *ngIf="order.status === 'CANCELLED'" class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">Annulée</span>
+                  </td>
+                  <td class="px-6 py-4"><button class="text-sm text-blue-600 hover:text-blue-700 font-medium">Voir détails</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION MESSAGES -->
+    <div *ngIf="currentSection === 'messages'">
+      <div class="bg-white border-b border-gray-200 px-6 py-4">
+        <h1 class="text-2xl font-bold text-gray-900">Messagerie</h1>
+        <p class="text-sm text-gray-500">Communiquez avec vos clients</p>
+      </div>
+      <div class="p-6">
+        <div class="bg-white border border-gray-200 rounded-lg p-12 text-center">
+          <div class="text-6xl mb-4">💬</div>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">Messagerie intégrée</h3>
+          <p class="text-gray-600 mb-4">Accédez à vos conversations avec les clients</p>
+          <button routerLink="/messages" class="inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">Ouvrir la messagerie</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION LOGISTICS -->
+    <div *ngIf="currentSection === 'logistics'">
+      <div class="bg-white border-b border-gray-200 px-6 py-4">
+        <h1 class="text-2xl font-bold text-gray-900">Logistique</h1>
+        <p class="text-sm text-gray-500">Gérez vos besoins en transport et stockage</p>
+      </div>
+      <div class="p-6">
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="bg-white border border-gray-200 rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h3 class="font-bold text-gray-900 flex items-center gap-2">
+                <span class="text-xl">🚚</span>
+                Demandes de transport
+              </h3>
+            </div>
+            <div class="p-6">
+              <button class="w-full mb-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
+                ➕ Nouvelle demande
+              </button>
+              <div class="space-y-3">
+                <div class="p-3 border border-gray-200 rounded-lg">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="font-medium text-gray-900">Nabeul → Tunis</span>
+                    <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs font-medium">En attente</span>
+                  </div>
+                  <div class="text-sm text-gray-600">
+                    <div>Date: 25 Jan 2026</div>
+                    <div>Produit: Tomates (50kg)</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white border border-gray-200 rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h3 class="font-bold text-gray-900 flex items-center gap-2">
+                <span class="text-xl">📦</span>
+                Stockage frigorifique
+              </h3>
+            </div>
+            <div class="p-6">
+              <button class="w-full mb-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
+                ➕ Réserver un espace
+              </button>
+              <div class="text-center py-8 text-gray-500">
+                Aucune réservation active
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION RECRUITMENT -->
+    <div *ngIf="currentSection === 'recruitment'">
+      <div class="bg-white border-b border-gray-200 px-6 py-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900">Recrutement</h1>
+            <p class="text-sm text-gray-500">Trouvez des travailleurs pour votre ferme</p>
+          </div>
+          <button class="inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
+            <span>➕</span>
+            <span>Publier une offre</span>
+          </button>
+        </div>
+      </div>
+      <div class="p-6 space-y-4">
+        <div class="bg-white border border-gray-200 rounded-lg p-6">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-2">
+                <h3 class="text-xl font-semibold text-gray-900">Ouvrier agricole saisonnier</h3>
+                <span class="px-2 py-1 bg-green-500 text-white rounded text-xs font-medium">CDI</span>
+                <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">Active</span>
+              </div>
+              <p class="text-gray-600 mb-3">Recherche ouvrier expérimenté pour la récolte des agrumes. Travail en équipe, ambiance conviviale.</p>
+              <div class="grid sm:grid-cols-3 gap-4 text-sm">
+                <div class="flex items-center gap-2">
+                  <span class="text-lg">📅</span>
+                  <span class="text-gray-700">Durée: 3 mois</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-lg">💰</span>
+                  <span class="text-gray-700">800-1000 TND/mois</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-lg">📍</span>
+                  <span class="text-gray-700">Nabeul</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex gap-2 ml-4">
+              <button class="p-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">✏️</button>
+              <button class="p-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">🗑️</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION PAYMENTS -->
+    <div *ngIf="currentSection === 'payments'">
+      <div class="bg-white border-b border-gray-200 px-6 py-4">
+        <h1 class="text-2xl font-bold text-gray-900">Paiements & Revenus</h1>
+        <p class="text-sm text-gray-500">Suivez vos revenus et transactions</p>
+      </div>
+      <div class="p-6">
+        <div class="grid md:grid-cols-3 gap-6 mb-6">
+          <div class="bg-white border border-gray-200 rounded-lg p-6">
+            <div class="text-sm text-gray-500 mb-2">Revenus du mois</div>
+            <div class="text-3xl font-bold text-green-600 mb-1">2,450 TND</div>
+            <div class="text-sm text-green-600">+12.5% vs mois dernier</div>
+          </div>
+          <div class="bg-white border border-gray-200 rounded-lg p-6">
+            <div class="text-sm text-gray-500 mb-2">En attente</div>
+            <div class="text-3xl font-bold text-gray-900 mb-1">380 TND</div>
+            <div class="text-sm text-gray-500">5 paiements</div>
+          </div>
+          <div class="bg-white border border-gray-200 rounded-lg p-6">
+            <div class="text-sm text-gray-500 mb-2">Disponible</div>
+            <div class="text-3xl font-bold text-blue-600 mb-1">2,070 TND</div>
+            <button class="w-full mt-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium">Demander un virement</button>
+          </div>
+        </div>
+
+        <div class="bg-white border border-gray-200 rounded-lg">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="font-bold text-gray-900">Historique des transactions</h3>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Date</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Description</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Méthode</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Montant</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Statut</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <tr class="hover:bg-gray-50">
+                  <td class="px-6 py-4 text-sm text-gray-700">23 Jan</td>
+                  <td class="px-6 py-4 text-sm text-gray-700">Commande #01</td>
+                  <td class="px-6 py-4"><span class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">CB</span></td>
+                  <td class="px-6 py-4 text-sm font-semibold text-gray-900">21.00 TND</td>
+                  <td class="px-6 py-4"><span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">Payé</span></td>
+                </tr>
+                <tr class="hover:bg-gray-50">
+                  <td class="px-6 py-4 text-sm text-gray-700">22 Jan</td>
+                  <td class="px-6 py-4 text-sm text-gray-700">Commande #02</td>
+                  <td class="px-6 py-4"><span class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">Mobile Money</span></td>
+                  <td class="px-6 py-4 text-sm font-semibold text-gray-900">9.60 TND</td>
+                  <td class="px-6 py-4"><span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs font-medium">En attente</span></td>
+                </tr>
+                <tr class="hover:bg-gray-50">
+                  <td class="px-6 py-4 text-sm text-gray-700">21 Jan</td>
+                  <td class="px-6 py-4 text-sm text-gray-700">Commande #03</td>
+                  <td class="px-6 py-4"><span class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">CB</span></td>
+                  <td class="px-6 py-4 text-sm font-semibold text-gray-900">8.50 TND</td>
+                  <td class="px-6 py-4"><span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">Payé</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION SETTINGS -->
+    <div *ngIf="currentSection === 'settings'">
+      <div class="bg-white border-b border-gray-200 px-6 py-4">
+        <h1 class="text-2xl font-bold text-gray-900">Paramètres</h1>
+        <p class="text-sm text-gray-500">Configurez votre espace agriculteur</p>
+      </div>
+      <div class="p-6 space-y-6">
+        
+        <!-- Notifications Settings -->
+        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h3 class="font-semibold text-gray-900 flex items-center gap-2">
+              <span class="text-xl">🔔</span>
+              <span>Notifications</span>
+            </h3>
+          </div>
+          <div class="p-6 space-y-4">
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div>
+                <div class="font-medium text-gray-900">Nouvelles commandes</div>
+                <div class="text-sm text-gray-500">Recevoir une notification pour chaque nouvelle commande</div>
+              </div>
+              <label class="relative inline-block w-12 h-6 cursor-pointer">
+                <input type="checkbox" class="sr-only peer" checked>
+                <span class="absolute inset-0 bg-gray-300 peer-checked:bg-green-600 rounded-full transition-colors"></span>
+                <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-6"></span>
+              </label>
+            </div>
+            
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div>
+                <div class="font-medium text-gray-900">Messages clients</div>
+                <div class="text-sm text-gray-500">Être notifié des nouveaux messages</div>
+              </div>
+              <label class="relative inline-block w-12 h-6 cursor-pointer">
+                <input type="checkbox" class="sr-only peer" checked>
+                <span class="absolute inset-0 bg-gray-300 peer-checked:bg-green-600 rounded-full transition-colors"></span>
+                <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-6"></span>
+              </label>
+            </div>
+            
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div>
+                <div class="font-medium text-gray-900">Promotions et offres</div>
+                <div class="text-sm text-gray-500">Recevoir les offres promotionnelles</div>
+              </div>
+              <label class="relative inline-block w-12 h-6 cursor-pointer">
+                <input type="checkbox" class="sr-only peer">
+                <span class="absolute inset-0 bg-gray-300 peer-checked:bg-green-600 rounded-full transition-colors"></span>
+                <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-6"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Security Settings -->
+        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h3 class="font-semibold text-gray-900 flex items-center gap-2">
+              <span class="text-xl">🔒</span>
+              <span>Sécurité</span>
+            </h3>
+          </div>
+          <div class="p-6 space-y-4">
+            <button class="w-full p-4 bg-gray-50 rounded-lg hover:bg-gray-100 text-left transition-colors group">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-medium text-gray-900 mb-1">Changer le mot de passe</div>
+                  <div class="text-sm text-gray-500">Dernière modification il y a 30 jours</div>
+                </div>
+                <span class="text-gray-400 group-hover:text-gray-600">→</span>
+              </div>
+            </button>
+            
+            <button class="w-full p-4 bg-gray-50 rounded-lg hover:bg-gray-100 text-left transition-colors group">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-medium text-gray-900 mb-1">Authentification à deux facteurs</div>
+                  <div class="text-sm text-gray-500">Ajouter une couche de sécurité supplémentaire</div>
+                </div>
+                <span class="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full font-medium">Non activée</span>
+              </div>
+            </button>
+            
+            <button class="w-full p-4 bg-gray-50 rounded-lg hover:bg-gray-100 text-left transition-colors group">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-medium text-gray-900 mb-1">Sessions actives</div>
+                  <div class="text-sm text-gray-500">Gérer vos appareils connectés</div>
+                </div>
+                <span class="text-gray-400 group-hover:text-gray-600">→</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Payment Settings -->
+        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h3 class="font-semibold text-gray-900 flex items-center gap-2">
+              <span class="text-xl">💳</span>
+              <span>Paiements</span>
+            </h3>
+          </div>
+          <div class="p-6 space-y-4">
+            <button class="w-full p-4 bg-gray-50 rounded-lg hover:bg-gray-100 text-left transition-colors group">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-medium text-gray-900 mb-1">Coordonnées bancaires</div>
+                  <div class="text-sm text-gray-500">Compte bancaire pour recevoir les paiements</div>
+                </div>
+                <span class="text-gray-400 group-hover:text-gray-600">→</span>
+              </div>
+            </button>
+            
+            <button class="w-full p-4 bg-gray-50 rounded-lg hover:bg-gray-100 text-left transition-colors group">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-medium text-gray-900 mb-1">Historique des paiements</div>
+                  <div class="text-sm text-gray-500">Voir tous les paiements reçus</div>
+                </div>
+                <span class="text-gray-400 group-hover:text-gray-600">→</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Privacy Settings -->
+        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h3 class="font-semibold text-gray-900 flex items-center gap-2">
+              <span class="text-xl">🔐</span>
+              <span>Confidentialité</span>
+            </h3>
+          </div>
+          <div class="p-6 space-y-4">
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div>
+                <div class="font-medium text-gray-900">Profil public</div>
+                <div class="text-sm text-gray-500">Rendre mon profil visible dans le marketplace</div>
+              </div>
+              <label class="relative inline-block w-12 h-6 cursor-pointer">
+                <input type="checkbox" class="sr-only peer" checked>
+                <span class="absolute inset-0 bg-gray-300 peer-checked:bg-green-600 rounded-full transition-colors"></span>
+                <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-6"></span>
+              </label>
+            </div>
+            
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div>
+                <div class="font-medium text-gray-900">Afficher mes coordonnées</div>
+                <div class="text-sm text-gray-500">Permettre aux clients de me contacter directement</div>
+              </div>
+              <label class="relative inline-block w-12 h-6 cursor-pointer">
+                <input type="checkbox" class="sr-only peer" checked>
+                <span class="absolute inset-0 bg-gray-300 peer-checked:bg-green-600 rounded-full transition-colors"></span>
+                <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-6"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="bg-white border border-red-200 rounded-lg overflow-hidden">
+          <div class="px-6 py-4 border-b border-red-200 bg-red-50">
+            <h3 class="font-semibold text-red-900 flex items-center gap-2">
+              <span class="text-xl">⚠️</span>
+              <span>Zone dangereuse</span>
+            </h3>
+          </div>
+          <div class="p-6 space-y-4">
+            <button class="w-full p-4 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 text-left transition-colors group">
+              <div>
+                <div class="font-medium text-red-900 mb-1">Désactiver mon compte</div>
+                <div class="text-sm text-red-700">Désactiver temporairement mon compte agriculteur</div>
+              </div>
+            </button>
+            
+            <button class="w-full p-4 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 text-left transition-colors group">
+              <div>
+                <div class="font-medium text-red-900 mb-1">Supprimer mon compte</div>
+                <div class="text-sm text-red-700">Supprimer définitivement toutes mes données</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SECTION PROFILE (LA PLUS IMPORTANTE) -->
+    <div *ngIf="currentSection === 'profile'">
+      <div class="bg-white border-b border-gray-200 px-6 py-4">
+        <h1 class="text-2xl font-bold text-gray-900">Mon Profil</h1>
+        <p class="text-sm text-gray-500">Gérez les informations de votre ferme</p>
+      </div>
+      <div class="p-6 space-y-6">
+        <!-- Farm Banner -->
+        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div class="h-40 relative bg-gradient-to-r from-green-600 to-green-700">
+            <div class="absolute inset-0 opacity-20 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200');"></div>
+            <button class="absolute bottom-3 right-3 flex items-center gap-2 px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white text-sm rounded-lg border border-white/30 backdrop-blur-sm">
+              <span>📷</span>
+              <span>Changer la bannière</span>
+            </button>
+          </div>
+          <div class="p-6">
+            <div class="flex flex-col sm:flex-row gap-4 -mt-16 relative pb-4">
+              <div class="relative w-24 h-24 rounded-2xl bg-white border-4 border-white shadow-lg flex items-center justify-center">
+                <span class="text-4xl text-green-600 font-bold">{{ (currentUser?.firstName?.charAt(0) || 'A') + (currentUser?.lastName?.charAt(0) || 'B') }}</span>
+                <button class="absolute -bottom-2 -right-2 w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center text-white shadow">
+                  <span class="text-sm">📷</span>
+                </button>
+              </div>
+              <div class="sm:mt-12 flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                  <h2 class="text-xl font-bold text-gray-900">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</h2>
+                  <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Agriculteur vérifié ✓</span>
+                </div>
+                <p class="text-gray-500 text-sm">{{ currentUser?.farmerProfile?.farmName || 'Ma Ferme' }} · {{ currentUser?.address?.city || 'Tunisie' }}</p>
+              </div>
+              <div class="sm:mt-12">
+                <button routerLink="/profile" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium flex items-center gap-2">
+                  <span>✏️</span>
+                  <span>Modifier le profil</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Profile Forms -->
+        <div class="grid lg:grid-cols-2 gap-6">
+          <!-- Personal Information -->
+          <div class="bg-white border border-gray-200 rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h3 class="font-semibold text-gray-900">Informations personnelles</h3>
+            </div>
+            <div class="p-6 space-y-4">
+              <div class="space-y-1.5">
+                <label class="text-sm text-gray-600 flex items-center gap-2">
+                  <span class="text-lg">👤</span>
+                  <span>Nom complet</span>
+                </label>
+                <div class="px-3 py-2.5 bg-gray-50 rounded-lg text-sm text-gray-900">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</div>
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-sm text-gray-600 flex items-center gap-2">
+                  <span class="text-lg">📧</span>
+                  <span>Email</span>
+                </label>
+                <div class="px-3 py-2.5 bg-gray-50 rounded-lg text-sm text-gray-900">{{ currentUser?.email }}</div>
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-sm text-gray-600 flex items-center gap-2">
+                  <span class="text-lg">📱</span>
+                  <span>Téléphone</span>
+                </label>
+                <div class="px-3 py-2.5 bg-gray-50 rounded-lg text-sm text-gray-900">{{ currentUser?.phone || 'Non renseigné' }}</div>
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-sm text-gray-600 flex items-center gap-2">
+                  <span class="text-lg">📍</span>
+                  <span>Localisation</span>
+                </label>
+                <div class="px-3 py-2.5 bg-gray-50 rounded-lg text-sm text-gray-900">{{ currentUser?.address?.city || 'Non renseigné' }}, {{ currentUser?.address?.state || '' }}</div>
+              </div>
+              <button routerLink="/profile" class="w-full px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium flex items-center justify-center gap-2">
+                <span>✏️</span>
+                <span>Modifier mes informations</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Farm Information -->
+          <div class="bg-white border border-gray-200 rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h3 class="font-semibold text-gray-900">Ma Ferme</h3>
+            </div>
+            <div class="p-6 space-y-4">
+              <div class="space-y-1.5">
+                <label class="text-sm text-gray-600">Nom de la ferme</label>
+                <div class="px-3 py-2.5 bg-gray-50 rounded-lg text-sm text-gray-900">{{ currentUser?.farmerProfile?.farmName || 'Non renseigné' }}</div>
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-sm text-gray-600">Superficie</label>
+                <div class="px-3 py-2.5 bg-gray-50 rounded-lg text-sm text-gray-900">12 hectares</div>
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-sm text-gray-600">Spécialité</label>
+                <div class="px-3 py-2.5 bg-gray-50 rounded-lg text-sm text-gray-900">Maraîchage Bio, Agrumes</div>
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-sm text-gray-600">Certifications</label>
+                <div class="px-3 py-2.5 bg-gray-50 rounded-lg text-sm text-gray-900">Bio (Ecocert), GlobalGAP</div>
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-sm text-gray-600">Description</label>
+                <textarea rows="3" readonly class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm resize-none bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500">{{ currentUser?.farmerProfile?.description || 'Ferme familiale spécialisée dans l\'agriculture biologique.' }}</textarea>
+              </div>
+              <button routerLink="/profile" class="w-full px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium flex items-center justify-center gap-2">
+                <span>✏️</span>
+                <span>Modifier ma ferme</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-white border border-gray-200 rounded-lg text-center p-5">
+            <div class="text-2xl mb-1">⭐</div>
+            <div class="text-xl font-bold text-gray-900">4.9/5</div>
+            <div class="text-xs text-gray-500">Note moyenne</div>
+          </div>
+          <div class="bg-white border border-gray-200 rounded-lg text-center p-5">
+            <div class="text-2xl mb-1">👥</div>
+            <div class="text-xl font-bold text-gray-900">127</div>
+            <div class="text-xs text-gray-500">Clients fidèles</div>
+          </div>
+          <div class="bg-white border border-gray-200 rounded-lg text-center p-5">
+            <div class="text-2xl mb-1">💬</div>
+            <div class="text-xl font-bold text-gray-900">89</div>
+            <div class="text-xs text-gray-500">Avis reçus</div>
+          </div>
+          <div class="bg-white border border-gray-200 rounded-lg text-center p-5">
+            <div class="text-2xl mb-1">📅</div>
+            <div class="text-xl font-bold text-gray-900">Jan 2024</div>
+            <div class="text-xs text-gray-500">Membre depuis</div>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="bg-white border border-red-200 rounded-lg">
+          <div class="p-6">
+            <h3 class="text-red-700 font-semibold mb-1">Zone de danger</h3>
+            <p class="text-sm text-gray-600 mb-4">Ces actions sont définitives.</p>
+            <div class="flex gap-3">
+              <button (click)="logout()" class="px-4 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 text-sm font-medium flex items-center gap-2">
+                <span>🚪</span>
+                <span>Se déconnecter</span>
+              </button>
+              <button class="px-4 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 text-sm font-medium">
+                Désactiver mon compte
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>

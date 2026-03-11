@@ -1,0 +1,80 @@
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║            ⚡ UNE SEULE ACTION À FAIRE ⚡                      ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+
+📂 1. Ouvrez l'Explorateur Windows
+
+📁 2. Allez dans ce dossier :
+   C:\Users\HAZEM\agricultural-marketplace-fullstack
+
+📄 3. Double-cliquez sur :
+   TOUT-LANCER.bat
+
+
+═══════════════════════════════════════════════════════════════
+
+⏳ CE QUI VA SE PASSER :
+
+1. Arrêt automatique des processus Java         [5 secondes]
+2. Nettoyage de l'ancien build                  [2 secondes]
+3. Compilation du backend                       [20-30 secondes]
+4. Démarrage du backend avec DataSeeder         [30-60 secondes]
+
+═══════════════════════════════════════════════════════════════
+
+✅ VOUS SAUREZ QUE C'EST RÉUSSI QUAND VOUS VERREZ :
+
+   🗑️ Clearing existing data...
+   ✅ Existing data cleared.
+   🌱 Seeding database with demo data...
+   ✅ Database seeded successfully!
+   📧 Farmer: farmer@test.com / password123
+   📧 Customer 1: customer1@test.com / password123
+
+═══════════════════════════════════════════════════════════════
+
+⚠️  IMPORTANT :
+
+• NE FERMEZ PAS la fenêtre du backend
+• Elle doit rester ouverte tout le temps
+• C'est normal si elle affiche beaucoup de texte
+
+═══════════════════════════════════════════════════════════════
+
+📋 APRÈS LE DÉMARRAGE :
+
+1. Ouvrez un NOUVEAU terminal / invite de commandes
+
+2. Double-cliquez sur : LANCER-TESTS.bat
+   → Pour vérifier que tout fonctionne (10 produits)
+
+3. Ouvrez votre navigateur : http://localhost:4200
+   → Login: farmer@test.com / password123
+   → Vous verrez 10 produits et 3 commandes !
+
+═══════════════════════════════════════════════════════════════
+
+🆘 SI PROBLÈME :
+
+• MongoDB pas démarré ?
+  → Cherchez "mongod" dans le Gestionnaire des tâches
+  → S'il n'est pas là, démarrez MongoDB
+
+• Erreur de compilation ?
+  → Vérifiez votre connexion Internet
+  → Maven a besoin de télécharger des dépendances
+
+• Port 8081 occupé ?
+  → Fermez toutes les fenêtres Java
+  → Relancez TOUT-LANCER.bat
+
+═══════════════════════════════════════════════════════════════
+
+🚀 COMMENCEZ MAINTENANT !
+
+Double-cliquez sur : TOUT-LANCER.bat
+
+═══════════════════════════════════════════════════════════════

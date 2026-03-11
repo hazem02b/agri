@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guide de Démarrage - Agricultural Marketplace</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .step {
+            background: #f8f9fa;
+            border-left: 5px solid #667eea;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        
+        .step:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .step-number {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 50px;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-right: 15px;
+            vertical-align: middle;
+        }
+        
+        .step h2 {
+            display: inline-block;
+            color: #333;
+            font-size: 1.8em;
+            vertical-align: middle;
+            margin-bottom: 15px;
+        }
+        
+        .step-content {
+            margin-top: 20px;
+            padding-left: 65px;
+        }
+        
+        .file-button {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 10px 0;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .file-button:hover {
+            background: #218838;
+            transform: scale(1.05);
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        
+        .success {
+            background: #d4edda;
+            border-left: 5px solid #28a745;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        
+        .code {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        
+        .credentials {
+            background: #e7f3ff;
+            border: 2px solid #2196F3;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .credentials h3 {
+            color: #1976D2;
+            margin-bottom: 15px;
+        }
+        
+        .credentials ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .credentials li {
+            padding: 8px 0;
+            font-size: 1.1em;
+        }
+        
+        .emoji {
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+        
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #666;
+        }
+        
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .checklist li {
+            padding: 10px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .checklist li::before {
+            content: "✅ ";
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Guide de Démarrage</h1>
+            <p>Agricultural Marketplace Platform</p>
+        </div>
+        
+        <div class="content">
+            <div class="success">
+                <h3><span class="emoji">✅</span>Tout est prêt !</h3>
+                <p>Le backend a été corrigé, le DataSeeder créé, et les scripts de test sont prêts. Il ne reste plus qu'à lancer !</p>
+            </div>
+            
+            <!-- ÉTAPE 1 -->
+            <div class="step">
+                <span class="step-number">1</span>
+                <h2>Redémarrer le Backend</h2>
+                <div class="step-content">
+                    <p><strong>Action :</strong> Ouvrez l'Explorateur Windows et allez dans :</p>
+                    <div class="code">C:\Users\HAZEM\agricultural-marketplace-fullstack</div>
+                    <p><strong>Puis double-cliquez sur :</strong></p>
+                    <div style="text-align: center; margin: 20px 0;">
+                        <span class="file-button">📄 START-BACKEND.bat</span>
+                    </div>
+                    
+                    <div class="warning">
+                        <strong>⏳ Attendez 30-60 secondes</strong><br>
+                        Une fenêtre noire va s'ouvrir. Recherchez ces messages :
+                    </div>
+                    
+                    <div class="code">
+🗑️ Clearing existing data...<br>
+✅ Existing data cleared.<br>
+🌱 Seeding database with demo data...<br>
+✅ Database seeded successfully!<br>
+📧 Farmer: farmer@test.com / password123<br>
+📧 Customer 1: customer1@test.com / password123
+                    </div>
+                    
+                    <div class="warning">
+                        <strong>⚠️ IMPORTANT</strong><br>
+                        NE FERMEZ PAS cette fenêtre ! Le backend doit rester ouvert.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ÉTAPE 2 -->
+            <div class="step">
+                <span class="step-number">2</span>
+                <h2>Lancer les Tests</h2>
+                <div class="step-content">
+                    <p><strong>Toujours dans l'Explorateur Windows, double-cliquez sur :</strong></p>
+                    <div style="text-align: center; margin: 20px 0;">
+                        <span class="file-button">🧪 LANCER-TESTS.bat</span>
+                    </div>
+                    
+                    <p>Ce script va automatiquement tester :</p>
+                    <ul class="checklist">
+                        <li>Les 10 produits créés</li>
+                        <li>L'authentification (login)</li>
+                        <li>Les commandes</li>
+                        <li>La messagerie</li>
+                        <li>Le frontend</li>
+                    </ul>
+                    
+                    <div class="success">
+                        <strong>✅ Si tout est OK</strong><br>
+                        Vous verrez : "Produits : 10 élément(s)"
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ÉTAPE 3 -->
+            <div class="step">
+                <span class="step-number">3</span>
+                <h2>Tester dans le Navigateur</h2>
+                <div class="step-content">
+                    <p><strong>Ouvrez votre navigateur et allez sur :</strong></p>
+                    <div style="text-align: center; margin: 20px 0;">
+                        <a href="http://localhost:4200" target="_blank" class="file-button">🌐 http://localhost:4200</a>
+                    </div>
+                    
+                    <div class="credentials">
+                        <h3>🔐 Comptes de Test</h3>
+                        
+                        <strong>👨‍🌾 Compte Agriculteur :</strong>
+                        <ul>
+                            <li><strong>Email :</strong> farmer@test.com</li>
+                            <li><strong>Password :</strong> password123</li>
+                            <li><strong>Vous verrez :</strong> 10 produits, 3 commandes</li>
+                        </ul>
+                        
+                        <br>
+                        
+                        <strong>🛒 Compte Client :</strong>
+                        <ul>
+                            <li><strong>Email :</strong> customer1@test.com</li>
+                            <li><strong>Password :</strong> password123</li>
+                            <li><strong>Vous verrez :</strong> 2 commandes, 1 conversation</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- RÉSUMÉ -->
+            <div class="step" style="background: #e7f3ff; border-left-color: #2196F3;">
+                <h2 style="color: #1976D2;">📋 Résumé Rapide</h2>
+                <div class="step-content" style="padding-left: 0;">
+                    <ol style="font-size: 1.2em; line-height: 2;">
+                        <li>Double-clic <strong>START-BACKEND.bat</strong> → Attendez les messages de seed</li>
+                        <li>Double-clic <strong>LANCER-TESTS.bat</strong> → Vérifiez que tout est ✅</li>
+                        <li>Ouvrez <strong>http://localhost:4200</strong> → Login farmer@test.com</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>📚 Pour plus de détails, consultez :</strong></p>
+            <p>GUIDE_TEST_COMPLET.md dans le dossier du projet</p>
+            <p style="margin-top: 20px; color: #999;">Agricultural Marketplace Platform - Mars 2026</p>
+        </div>
+    </div>
+</body>
+</html>

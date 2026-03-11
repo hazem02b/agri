@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: agricultural-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=agricultural_marketplace
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - agricultural-network
+
+  backend:
+    build: ./backend
+    container_name: agricultural-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/agricultural_marketplace
+    depends_on:
+      - mongodb
+    networks:
+      - agricultural-network
+
+  frontend:
+    build: ./frontend
+    container_name: agricultural-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+    networks:
+      - agricultural-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  agricultural-network:
+    driver: bridge

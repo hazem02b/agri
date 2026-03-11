@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ ACTION REQUISE</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            max-width: 700px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            overflow: hidden;
+            animation: slideIn 0.5s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .content {
+            padding: 50px;
+            text-align: center;
+        }
+        .big-number {
+            font-size: 8em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 20px 0;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.1);
+        }
+        .instruction {
+            font-size: 1.5em;
+            color: #333;
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+        .file-name {
+            background: #667eea;
+            color: white;
+            padding: 20px 40px;
+            border-radius: 15px;
+            font-size: 2em;
+            font-weight: bold;
+            display: inline-block;
+            margin: 30px 0;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .file-name:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 10px;
+            text-align: left;
+        }
+        .warning h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        .success {
+            background: #d4edda;
+            border-left: 5px solid #28a745;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 10px;
+            text-align: left;
+        }
+        .success h3 {
+            color: #155724;
+            margin-bottom: 10px;
+        }
+        .arrow {
+            font-size: 4em;
+            color: #667eea;
+            animation: bounce 1s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ ACTION REQUISE</h1>
+            <p>Une seule action à faire !</p>
+        </div>
+        
+        <div class="content">
+            <div class="big-number">1</div>
+            
+            <p class="instruction">
+                <strong>Double-cliquez sur ce fichier :</strong>
+            </p>
+            
+            <div class="file-name">
+                📄 TOUT-LANCER.bat
+            </div>
+            
+            <div class="arrow">↓</div>
+            
+            <div class="warning">
+                <h3>⏳ Que va-t-il se passer ?</h3>
+                <ul style="padding-left: 20px; margin-top: 10px;">
+                    <li style="margin: 8px 0;">Arrêt automatique des anciens processus Java</li>
+                    <li style="margin: 8px 0;">Compilation du backend (20-30 secondes)</li>
+                    <li style="margin: 8px 0;">Démarrage du backend avec DataSeeder</li>
+                    <li style="margin: 8px 0;">Création de 10 produits, 3 utilisateurs, 3 commandes</li>
+                </ul>
+            </div>
+            
+            <div class="success">
+                <h3>✅ Vous saurez que c'est réussi quand vous verrez :</h3>
+                <ul style="padding-left: 20px; margin-top: 10px; font-family: monospace;">
+                    <li style="margin: 8px 0;">🗑️ Clearing existing data...</li>
+                    <li style="margin: 8px 0;">✅ Existing data cleared.</li>
+                    <li style="margin: 8px 0;">🌱 Seeding database with demo data...</li>
+                    <li style="margin: 8px 0;"><strong style="color: #28a745;">✅ Database seeded successfully!</strong></li>
+                    <li style="margin: 8px 0;">📧 Farmer: farmer@test.com / password123</li>
+                </ul>
+            </div>
+            
+            <p class="instruction" style="margin-top: 40px; color: #dc3545;">
+                <strong>⚠️ NE FERMEZ PAS la fenêtre du backend !</strong><br>
+                Elle doit rester ouverte pour que le backend fonctionne.
+            </p>
+            
+            <p class="instruction" style="margin-top: 30px; font-size: 1.2em;">
+                Ensuite, vous pourrez lancer :<br>
+                <strong>LANCER-TESTS.bat</strong> pour vérifier que tout fonctionne
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        // Ouvrir l'explorateur Windows automatiquement après 2 secondes
+        setTimeout(function() {
+            if (confirm("Voulez-vous ouvrir le dossier contenant TOUT-LANCER.bat ?")) {
+                window.location.href = "file:///C:/Users/HAZEM/agricultural-marketplace-fullstack";
+            }
+        }, 2000);
+    </script>
+</body>
+</html>
