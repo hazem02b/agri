@@ -57,16 +57,20 @@ export class LoginComponent implements AfterViewInit {
   handleGoogleCallback(idToken: string) {
     this.loading = true;
     this.error = '';
-    this.authService.loginWithGoogle(idToken, this.userRole).subscribe({
+    // Map BUYER → CUSTOMER for backend
+    const backendRole = this.userRole === 'BUYER' ? 'CUSTOMER' : this.userRole;
+    this.authService.loginWithGoogle(idToken, backendRole).subscribe({
       next: (response) => {
         this.loading = false;
         this.toastService.success('Connexion Google réussie ! Bienvenue.');
         const destination = (response.role === 'FARMER') ? '/farmer-dashboard' : '/marketplace';
         setTimeout(() => { window.location.href = destination; }, 300);
       },
-      error: () => {
+      error: (err) => {
         this.loading = false;
-        this.error = 'Connexion Google échouée. Vérifiez votre Client ID Google ou réessayez.';
+        const msg = err?.error?.message || 'Connexion Google échouée.';
+        this.error = msg;
+        this.toastService.error(msg);
       }
     });
   }

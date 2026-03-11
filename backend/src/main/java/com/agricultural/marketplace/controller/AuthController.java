@@ -46,11 +46,16 @@ public class AuthController {
         try {
             String token = body.get("token");
             String role = body.get("role");
+            if (token == null || token.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(new ApiResponse(false, "Token Google manquant"));
+            }
             AuthResponse response = authService.googleLogin(token, role);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            System.err.println("[Google Auth] Erreur: " + e.getMessage());
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse(false, "Google authentication failed: " + e.getMessage()));
+                    .body(new ApiResponse(false, "Connexion Google échouée: " + e.getMessage()));
         }
     }
 
