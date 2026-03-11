@@ -38,7 +38,11 @@ export interface FarmerProfile {
   rating: number;
   totalReviews: number;
   farmImage?: string;
+  farmSize?: number;
   specialties: string[];
+  farmLat?: number;
+  farmLng?: number;
+  farmAddress?: string;
 }
 
 export interface LoginRequest {
@@ -52,6 +56,8 @@ export interface UpdateProfileRequest {
   phone?: string;
   address?: Address;
   farmerProfile?: FarmerProfile;
+  profileImage?: string;
+  isActive?: boolean;
 }
 
 export interface ChangePasswordRequest {

@@ -31,9 +31,9 @@ public class JobOffer {
     
     private String location;
     
-    private Double salaryMin;
-    
-    private Double salaryMax;
+    private Double locationLat;
+
+    private Double locationLng;
     
     private String farmerId;
     
@@ -46,6 +46,10 @@ public class JobOffer {
     private List<String> benefits = new ArrayList<>();
     
     private Integer positions; // Number of positions available
+
+    private Double salaryMin;
+
+    private Double salaryMax;
     
     private JobStatus status;
     

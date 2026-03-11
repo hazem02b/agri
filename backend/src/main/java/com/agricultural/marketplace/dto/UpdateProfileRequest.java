@@ -14,4 +14,6 @@ public class UpdateProfileRequest {
     private String phone;
     private User.Address address;
     private User.FarmerProfile farmerProfile;
+    private String profileImage;
+    private Boolean isActive;
 }

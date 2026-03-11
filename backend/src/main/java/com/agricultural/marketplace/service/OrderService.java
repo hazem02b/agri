@@ -154,4 +154,8 @@ public class OrderService {
     public List<Order> getFarmerOrdersById(String farmerId) {
         return orderRepository.findByFarmerIdOrderByCreatedAtDesc(farmerId);
     }
+
+    public Order saveOrder(Order order) {
+        return orderRepository.save(order);
+    }
 }

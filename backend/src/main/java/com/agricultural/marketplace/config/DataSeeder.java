@@ -41,16 +41,11 @@ public class DataSeeder implements CommandLineRunner {
     
     @Override
     public void run(String... args) {
-        // Clear existing data to ensure fresh seed
-        System.out.println("🗑️ Clearing existing data...");
-        paymentMethodRepository.deleteAll();
-        deliveryRouteRepository.deleteAll();
-        jobOfferRepository.deleteAll();
-        conversationRepository.deleteAll();
-        orderRepository.deleteAll();
-        productRepository.deleteAll();
-        userRepository.deleteAll();
-        System.out.println("✅ Existing data cleared.");
+        // Only seed if test farmer doesn't exist yet (avoids wiping user accounts on restart)
+        if (userRepository.findByEmail("farmer@test.com").isPresent()) {
+            System.out.println("✅ Database already seeded, skipping.");
+            return;
+        }
         
         System.out.println("🌱 Seeding database with demo data...");
         

@@ -31,6 +31,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+
+        <!-- Spring WebSocket for real-time messaging -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
         
         <!-- Spring Boot Starter Data MongoDB -->
         <dependency>
@@ -84,6 +90,13 @@
             <version>3.2.0</version>
         </dependency>
         
+        <!-- Spring Boot Mail (pour envoi email reset mot de passe) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
+
         <!-- Spring Boot DevTools -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

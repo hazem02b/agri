@@ -64,6 +64,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Auth endpoints (public)
                 .requestMatchers("/api/auth/**").permitAll()
+                // WebSocket endpoint (public - JWT auth handled at STOMP level)
+                .requestMatchers("/ws/**").permitAll()
                 // Stats endpoints (public)
                 .requestMatchers("/api/stats/**").permitAll()
                 // Products endpoints (public for marketplace)

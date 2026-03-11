@@ -5,6 +5,8 @@ export interface JobOffer {
   jobType: JobType;
   contractType: ContractType;
   location: string;
+  locationLat?: number;
+  locationLng?: number;
   salaryMin?: number;
   salaryMax?: number;
   farmerId: string;

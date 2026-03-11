@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,15 +86,45 @@ public class DeliveryController {
         }
     }
     
-    // Create new delivery route
+// Get farmer's own logistics offers
+    @GetMapping("/farmer-offers")
+    public ResponseEntity<?> getFarmerOffers(Authentication authentication) {
+        try {
+            String email = authentication.getName();
+            Optional<User> userOpt = userRepository.findByEmail(email);
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("success", false, "message", "Utilisateur non trouvé"));
+            }
+            User user = userOpt.get();
+            List<DeliveryRoute> offers = deliveryRouteRepository.findByFarmerId(user.getId());
+            return ResponseEntity.ok(Map.of("success", true, "routes", offers, "count", offers.size()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("success", false, "message", "Erreur: " + e.getMessage()));
+        }
+    }
+
+    // Create new delivery route / logistics offer
     @PostMapping("/routes")
     public ResponseEntity<?> createRoute(@RequestBody DeliveryRoute route, Authentication authentication) {
         try {
             route.setCreatedAt(LocalDateTime.now());
             route.setUpdatedAt(LocalDateTime.now());
-            
+
             if (route.getStatus() == null) {
                 route.setStatus(DeliveryRoute.RouteStatus.PLANNED);
+            }
+
+            // Auto-set farmer info from authenticated user
+            if (authentication != null) {
+                String email = authentication.getName();
+                Optional<User> userOpt = userRepository.findByEmail(email);
+                if (userOpt.isPresent()) {
+                    User user = userOpt.get();
+                    route.setFarmerId(user.getId());
+                    route.setFarmerName(user.getFirstName() + " " + user.getLastName());
+                }
             }
             
             DeliveryRoute savedRoute = deliveryRouteRepository.save(route);
@@ -285,6 +316,143 @@ public class DeliveryController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("success", false, "message", "Error fetching routes: " + e.getMessage()));
+        }
+    }
+
+    // Update driver current GPS location (for tracking)
+    @PutMapping("/routes/{id}/driver-location")
+    public ResponseEntity<?> updateDriverLocation(@PathVariable String id,
+                                                  @RequestBody Map<String, Double> body) {
+        try {
+            Optional<DeliveryRoute> routeOpt = deliveryRouteRepository.findById(id);
+            if (routeOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("success", false, "message", "Tournée non trouvée"));
+            }
+            DeliveryRoute route = routeOpt.get();
+            if (body.containsKey("lat")) route.setDriverCurrentLat(body.get("lat"));
+            if (body.containsKey("lng")) route.setDriverCurrentLng(body.get("lng"));
+            route.setLastLocationUpdate(LocalDateTime.now().toString());
+            route.setUpdatedAt(LocalDateTime.now());
+            deliveryRouteRepository.save(route);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Position mise à jour"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "Erreur: " + e.getMessage()));
+        }
+    }
+
+    // Apply to be driver for a route (buyer)
+    @PostMapping("/routes/{id}/apply")
+    public ResponseEntity<?> applyToRoute(@PathVariable String id,
+                                          @RequestBody DeliveryRoute.LogisticsApplication application,
+                                          Authentication authentication) {
+        try {
+            Optional<DeliveryRoute> routeOpt = deliveryRouteRepository.findById(id);
+            if (routeOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("success", false, "message", "Tournee non trouvee"));
+            }
+            DeliveryRoute route = routeOpt.get();
+            if (route.getStatus() != DeliveryRoute.RouteStatus.PLANNED) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("success", false, "message", "Cette tournee n'accepte plus de candidatures"));
+            }
+            String email = authentication.getName();
+            Optional<User> userOpt = userRepository.findByEmail(email);
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("success", false, "message", "Utilisateur non trouve"));
+            }
+            User user = userOpt.get();
+            if (route.getApplications() == null) {
+                route.setApplications(new ArrayList<>());
+            }
+            boolean alreadyApplied = route.getApplications().stream()
+                    .anyMatch(a -> user.getId().equals(a.getApplicantId()));
+            if (alreadyApplied) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("success", false, "message", "Vous avez deja postule pour cette tournee"));
+            }
+            application.setApplicantId(user.getId());
+            application.setApplicantName(user.getFirstName() + " " + user.getLastName());
+            application.setApplicantEmail(user.getEmail());
+            application.setAppliedAt(LocalDateTime.now().toString());
+            application.setStatus(DeliveryRoute.LogisticsApplication.ApplicationStatus.PENDING);
+            route.getApplications().add(application);
+            route.setUpdatedAt(LocalDateTime.now());
+            deliveryRouteRepository.save(route);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Candidature envoyee avec succes"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "Erreur: " + e.getMessage()));
+        }
+    }
+
+    // Get my logistics applications (buyer)
+    @GetMapping("/applications/my")
+    public ResponseEntity<?> getMyLogisticsApplications(Authentication authentication) {
+        try {
+            String email = authentication.getName();
+            Optional<User> userOpt = userRepository.findByEmail(email);
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("success", false, "message", "Utilisateur non trouve"));
+            }
+            User user = userOpt.get();
+            List<DeliveryRoute> allRoutes = deliveryRouteRepository.findAll();
+            List<Map<String, Object>> myApplications = new ArrayList<>();
+            for (DeliveryRoute route : allRoutes) {
+                if (route.getApplications() != null) {
+                    for (int i = 0; i < route.getApplications().size(); i++) {
+                        DeliveryRoute.LogisticsApplication app = route.getApplications().get(i);
+                        if (user.getId().equals(app.getApplicantId())) {
+                            Map<String, Object> entry = new HashMap<>();
+                            entry.put("route", route);
+                            entry.put("application", app);
+                            entry.put("applicationIndex", i);
+                            myApplications.add(entry);
+                        }
+                    }
+                }
+            }
+            return ResponseEntity.ok(Map.of("success", true, "applications", myApplications));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "Erreur: " + e.getMessage()));
+        }
+    }
+
+    // Update logistics application status (farmer)
+    @PutMapping("/routes/{routeId}/applications/{appIndex}")
+    public ResponseEntity<?> updateLogisticsApplicationStatus(
+            @PathVariable String routeId,
+            @PathVariable int appIndex,
+            @RequestBody Map<String, String> body) {
+        try {
+            Optional<DeliveryRoute> routeOpt = deliveryRouteRepository.findById(routeId);
+            if (routeOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("success", false, "message", "Tournee non trouvee"));
+            }
+            DeliveryRoute route = routeOpt.get();
+            if (route.getApplications() == null || appIndex < 0 || appIndex >= route.getApplications().size()) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("success", false, "message", "Index de candidature invalide"));
+            }
+            DeliveryRoute.LogisticsApplication app = route.getApplications().get(appIndex);
+            if (body.containsKey("status")) {
+                app.setStatus(DeliveryRoute.LogisticsApplication.ApplicationStatus.valueOf(body.get("status")));
+            }
+            if (body.containsKey("notes")) {
+                app.setNotes(body.get("notes"));
+            }
+            route.setUpdatedAt(LocalDateTime.now());
+            deliveryRouteRepository.save(route);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Statut mis a jour"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "Erreur: " + e.getMessage()));
         }
     }
 }

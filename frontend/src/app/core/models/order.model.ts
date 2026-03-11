@@ -28,6 +28,10 @@ export interface Order {
   estimatedDeliveryDate?: Date;
   actualDeliveryDate?: Date;
   trackingHistory?: OrderTracking[];
+  // Live driver location tracking
+  driverCurrentLat?: number;
+  driverCurrentLng?: number;
+  lastDriverLocationUpdate?: string;
   createdAt: Date | string;
   updatedAt?: Date;
 }

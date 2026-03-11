@@ -1,4 +1,4 @@
-<header *ngIf="!hideNavbar" class="sticky top-0 z-50 backdrop-blur-xl bg-gray-900/95 shadow-2xl transition-all duration-300">
+﻿<header *ngIf="!hideNavbar" class="sticky top-0 z-50 backdrop-blur-xl bg-gray-900/95 shadow-2xl transition-all duration-300">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex items-center justify-between h-16">
       <!-- Logo -->
@@ -42,6 +42,16 @@
              class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-all text-white/70 hover:text-white hover:bg-white/10">
             <span class="text-lg">💬</span>
             <span>Messagerie</span>
+          </a>
+          <a routerLink="/offres-emploi" routerLinkActive="bg-white/15 text-white" [routerLinkActiveOptions]="{exact: false}"
+             class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-all text-white/70 hover:text-white hover:bg-white/10">
+            <span class="text-lg">💼</span>
+            <span>Offres d'emploi</span>
+          </a>
+          <a routerLink="/offres-logistique" routerLinkActive="bg-white/15 text-white" [routerLinkActiveOptions]="{exact: false}"
+             class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-all text-white/70 hover:text-white hover:bg-white/10">
+            <span class="text-lg">🚛</span>
+            <span>Livraisons</span>
           </a>
         </ng-container>
       </nav>
@@ -204,6 +214,17 @@
            class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-colors text-white/70 hover:text-white hover:bg-white/10">
           <span class="text-xl">📋</span>
           <span>Mes Commandes</span>
+        </a>
+
+        <a *ngIf="currentUser.role === 'CUSTOMER' || !currentUser.role" routerLink="/offres-emploi" (click)="closeMobileMenu()"
+           class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-colors text-white/70 hover:text-white hover:bg-white/10">
+          <span class="text-xl">💼</span>
+          <span>Offres d'emploi</span>
+        </a>
+        <a *ngIf="currentUser.role === 'CUSTOMER' || !currentUser.role" routerLink="/offres-logistique" (click)="closeMobileMenu()"
+           class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-colors text-white/70 hover:text-white hover:bg-white/10">
+          <span class="text-xl">🚛</span>
+          <span>Livraisons</span>
         </a>
 
         <div class="pt-2 border-t border-white/10">

@@ -10,6 +10,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -82,6 +84,22 @@ public class OrderController {
     @GetMapping("/farmer/{farmerId}")
     public ResponseEntity<List<Order>> getFarmerOrders(@PathVariable String farmerId) {
         return ResponseEntity.ok(orderService.getFarmerOrdersById(farmerId));
+    }
+
+    @PutMapping("/{id}/driver-location")
+    public ResponseEntity<?> updateOrderDriverLocation(@PathVariable String id,
+                                                       @RequestBody Map<String, Double> body) {
+        try {
+            Order order = orderService.getOrderById(id);
+            order.setDriverCurrentLat(body.get("lat"));
+            order.setDriverCurrentLng(body.get("lng"));
+            order.setLastDriverLocationUpdate(LocalDateTime.now().toString());
+            // Save via orderService — use a simple update method
+            Order saved = orderService.saveOrder(order);
+            return ResponseEntity.ok(new ApiResponse(true, "Location updated", saved));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage()));
+        }
     }
     
     // Inner class for request body

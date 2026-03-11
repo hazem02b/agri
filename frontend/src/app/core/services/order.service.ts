@@ -48,4 +48,8 @@ export class OrderService {
   cancelOrder(id: string): Observable<ApiResponse<Order>> {
     return this.http.delete<ApiResponse<Order>>(`${this.apiUrl}/${id}`);
   }
+
+  updateOrderDriverLocation(orderId: string, lat: number, lng: number): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/${orderId}/driver-location`, { lat, lng });
+  }
 }

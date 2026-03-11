@@ -4,11 +4,12 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { JobService } from '../../core/services/job.service';
 import { JobOffer, JobApplication, ApplicationStatus } from '../../core/models/job.model';
 import { FormsModule } from '@angular/forms';
+import { MapViewComponent } from '../../shared/components/map-view/map-view.component';
 
 @Component({
   selector: 'app-job-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, MapViewComponent],
   template: `
     <div class="min-h-screen bg-gray-50 py-8">
       <div class="max-w-4xl mx-auto px-4">
@@ -49,6 +50,9 @@ import { FormsModule } from '@angular/forms';
             <div>
               <h3 class="font-semibold text-gray-900 mb-2"><i class="fas fa-map-marker-alt mr-2"></i>Localisation</h3>
               <p class="text-gray-700">{{job.location}}</p>
+              <div *ngIf="job.locationLat && job.locationLng" class="mt-2">
+                <app-map-view [lat]="job.locationLat" [lng]="job.locationLng" [label]="job.location" height="180px"></app-map-view>
+              </div>
             </div>
             <div>
               <h3 class="font-semibold text-gray-900 mb-2"><i class="fas fa-dollar-sign mr-2"></i>Salaire</h3>

@@ -25,7 +25,7 @@ export const routes: Routes = [
     path: 'buyer-dashboard',
     loadChildren: () => import('./features/buyer-dashboard/buyer-dashboard.routes').then(m => m.BUYER_ROUTES),
     canActivate: [AuthGuard],
-    data: { role: 'BUYER' }
+    data: { role: 'CUSTOMER' }
   },
   {
     path: 'orders',
@@ -46,7 +46,7 @@ export const routes: Routes = [
     path: 'my-orders',
     loadComponent: () => import('./features/orders/order-tracking/order-tracking.component').then(m => m.OrderTrackingComponent),
     canActivate: [AuthGuard],
-    data: { role: 'BUYER' }
+    data: { role: 'CUSTOMER' }
   },
   {
     path: 'product/:id',
@@ -73,6 +73,14 @@ export const routes: Routes = [
     path: 'logistics',
     loadComponent: () => import('./features/logistics/logistics.component').then(m => m.LogisticsComponent),
     canActivate: [AuthGuard]
+  },
+  {
+    path: 'offres-emploi',
+    loadComponent: () => import('./features/buyer-jobs/buyer-jobs.component').then(m => m.BuyerJobsComponent)
+  },
+  {
+    path: 'offres-logistique',
+    loadComponent: () => import('./features/buyer-logistics/buyer-logistics.component').then(m => m.BuyerLogisticsComponent)
   },
   {
     path: '**',

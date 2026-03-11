@@ -152,8 +152,9 @@ export class MarketplaceComponent implements OnInit {
     // Price range filter
     filtered = filtered.filter(p => p.price >= this.minPrice && p.price <= this.maxPrice);
 
-    // Distance filter
+    // Distance filter — products without location are always shown
     filtered = filtered.filter(p => {
+      if (!p.location) return true;
       const distance = p.calculatedDistance !== undefined ? p.calculatedDistance : 999;
       return distance <= this.maxDistance;
     });

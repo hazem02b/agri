@@ -44,9 +44,19 @@ public class UserService {
         if (user.getRole() == User.UserRole.FARMER && request.getFarmerProfile() != null) {
             user.setFarmerProfile(request.getFarmerProfile());
         }
-        
+
+        // Update profile image if provided
+        if (request.getProfileImage() != null) {
+            user.setProfileImage(request.getProfileImage());
+        }
+
+        // Deactivate account if requested
+        if (request.getIsActive() != null) {
+            user.setIsActive(request.getIsActive());
+        }
+
         user.setUpdatedAt(LocalDateTime.now());
-        
+
         return userRepository.save(user);
     }
     

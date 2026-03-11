@@ -1,16 +1,25 @@
-﻿import { Component, OnInit, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
+﻿import { Component, OnInit, AfterViewInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../core/services/product.service';
 import { FarmerService } from '../../core/services/farmer.service';
 import { OrderService } from '../../core/services/order.service';
 import { AuthService } from '../../core/services/auth.service';
+import { MessageService } from '../../core/services/message.service';
+import { JobService } from '../../core/services/job.service';
+import { DeliveryService } from '../../core/services/delivery.service';
+import { ToastService } from '../../core/services/toast.service';
 import { Product } from '../../core/models/product.model';
 import { Order, OrderStatus } from '../../core/models/order.model';
+import { JobOffer, JobStatus, ContractType } from '../../core/models/job.model';
+import { DeliveryRoute, RouteStatus } from '../../core/models/delivery.model';
 import { User } from '../../core/models/user.model';
 import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
 import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.component';
+import { MapPickerComponent, MapLocation } from '../../shared/components/map-picker/map-picker.component';
+import { MapViewComponent } from '../../shared/components/map-view/map-view.component';
 import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
@@ -18,11 +27,11 @@ Chart.register(...registerables);
 @Component({
   selector: 'app-farmer-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, ProductCardComponent, SkeletonComponent],
+  imports: [CommonModule, RouterLink, FormsModule, ProductCardComponent, SkeletonComponent, MapPickerComponent, MapViewComponent],
   templateUrl: './farmer-dashboard.component.html',
   styleUrl: './farmer-dashboard.component.css'
 })
-export class FarmerDashboardComponent implements OnInit, AfterViewInit {
+export class FarmerDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('salesChart') salesChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('productsChart') productsChartRef!: ElementRef<HTMLCanvasElement>;
   
@@ -47,20 +56,66 @@ export class FarmerDashboardComponent implements OnInit, AfterViewInit {
   };
 
   recentOrders: Order[] = [];
+  allOrders: Order[] = [];
+
+  // GPS Location sharing for order delivery
+  sharingOrderId: string | null = null;
+  locationShareTimer: any = null;
   weeklySalesData: number[] = [0, 0, 0, 0, 0, 0, 0]; // Lun-Dim
+  topProductsLabels: string[] = [];
+  topProductsData: number[] = [];
+  unreadMessages = 0;
+  uniqueCustomers = 0;
+
+  // Jobs
+  myJobOffers: JobOffer[] = [];
+  jobsLoading = false;
+  JobStatus = JobStatus;
+  ContractType = ContractType;
+
+  // Delivery / logistics offers
+  myRoutes: DeliveryRoute[] = [];
+  routesLoading = false;
+  RouteStatus = RouteStatus;
+  showCreateOfferModal = false;
+  savingOffer = false;
+  offerForm = { destination: '', quantity: 0, quantityUnit: 'kg', scheduledDate: '', transportPrice: 0, description: '', destinationLat: 0, destinationLng: 0 };
+  selectedRouteForApplications: DeliveryRoute | null = null;
+  showApplicationsModal = false;
+  updatingAppIndex: number | null = null;
+
+  // Farm edit
+  editingFarm = false;
+  savingFarm = false;
+  farmForm = { farmName: '', farmSize: 0, specialties: '', certifications: '', description: '', farmLat: 0, farmLng: 0, farmAddress: '' };
+
+  // Image saving state
+  savingBanner = false;
+  savingPhoto = false;
 
   constructor(
     private productService: ProductService,
     private farmerService: FarmerService,
     private orderService: OrderService,
     private authService: AuthService,
-    private router: Router
+    private messageService: MessageService,
+    private jobService: JobService,
+    private deliveryService: DeliveryService,
+    private toastService: ToastService,
+    private sanitizer: DomSanitizer,
+    public router: Router
   ) {}
 
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
     this.loadFarmerProducts();
     this.loadFarmerOrders();
+    this.loadMyJobOffers();
+    this.loadMyRoutes();
+    this.messageService.getConversations().subscribe();
+    this.messageService.unreadCount$.subscribe(count => {
+      this.unreadMessages = count;
+    });
   }
 
   ngAfterViewInit(): void {
@@ -133,10 +188,10 @@ export class FarmerDashboardComponent implements OnInit, AfterViewInit {
       this.productsChart = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: ['Tomates', 'Oranges', 'Poivrons', 'Citrons'],
+          labels: this.topProductsLabels,
           datasets: [{
             label: 'Ventes',
-            data: [52, 38, 28, 24],
+            data: this.topProductsData,
             backgroundColor: '#f97316',
             borderRadius: 8,
             barThickness: 50
@@ -196,15 +251,32 @@ export class FarmerDashboardComponent implements OnInit, AfterViewInit {
     }
   }
 
+  deleteProduct(productId: string): void {
+    if (!confirm('\u00cates-vous s\u00fbr de vouloir supprimer ce produit ?')) return;
+    this.productService.deleteProduct(productId).subscribe({
+      next: () => {
+        this.products = this.products.filter(p => p.id !== productId);
+      },
+      error: (err: any) => {
+        console.error('Error deleting product', err);
+        alert('Erreur lors de la suppression du produit.');
+      }
+    });
+  }
+
   loadFarmerOrders(): void {
     this.orderService.getMyFarmerOrders().subscribe({
       next: (orders: Order[]) => {
+        this.allOrders = orders;
         this.recentOrders = orders
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
           .slice(0, 5);
         this.calculateOrderStats(orders);
         this.calculateWeeklySales(orders);
+        this.calculateTopProducts(orders);
+        this.calculateUniqueCustomers(orders);
         this.updateSalesChart();
+        this.updateProductsChart();
       },
       error: (error: any) => {
         console.error('Error loading farmer orders', error);
@@ -254,6 +326,67 @@ export class FarmerDashboardComponent implements OnInit, AfterViewInit {
     }
   }
 
+  calculateTopProducts(orders: Order[]): void {
+    const salesMap = new Map<string, number>();
+    orders.forEach(order => {
+      order.items.forEach(item => {
+        const name = item.productName || item.productId;
+        salesMap.set(name, (salesMap.get(name) || 0) + item.quantity);
+      });
+    });
+    const sorted = Array.from(salesMap.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+    this.topProductsLabels = sorted.map(e => e[0]);
+    this.topProductsData = sorted.map(e => e[1]);
+  }
+
+  updateProductsChart(): void {
+    if (this.productsChart) {
+      this.productsChart.data.labels = this.topProductsLabels.length > 0 ? this.topProductsLabels : ['Aucune vente'];
+      this.productsChart.data.datasets[0].data = this.topProductsData.length > 0 ? this.topProductsData : [0];
+      this.productsChart.update();
+    }
+  }
+
+  calculateUniqueCustomers(orders: Order[]): void {
+    const ids = new Set(orders.map(o => o.buyerId || o.customerId).filter(Boolean));
+    this.uniqueCustomers = ids.size;
+  }
+
+  getMemberSince(): string {
+    if (!this.currentUser?.createdAt) return '-';
+    const d = new Date(this.currentUser.createdAt);
+    return d.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
+  }
+
+  getAverageRating(): string {
+    const rating = this.currentUser?.farmerProfile?.rating ?? this.stats.averageRating;
+    return rating > 0 ? (rating).toFixed(1) + '/5' : '-/5';
+  }
+
+  getTotalReviews(): number {
+    return this.currentUser?.farmerProfile?.totalReviews ?? 0;
+  }
+
+  getMonthlyRevenue(): number {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    return this.allOrders
+      .filter(o => new Date(o.createdAt) >= firstDay)
+      .reduce((sum, o) => sum + o.totalAmount, 0);
+  }
+
+  getPendingRevenue(): number {
+    return this.allOrders
+      .filter(o => o.paymentStatus === 'PENDING' || !o.paymentStatus)
+      .reduce((sum, o) => sum + o.totalAmount, 0);
+  }
+
+  getPendingOrdersCount(): number {
+    return this.allOrders.filter(o => o.paymentStatus === 'PENDING' || !o.paymentStatus).length;
+  }
+
   calculateStats(): void {
     this.stats.totalProducts = this.products.length;
     this.stats.lowStock = this.products.filter(p => p.stock && p.stock > 0 && p.stock <= 5).length;
@@ -286,8 +419,376 @@ export class FarmerDashboardComponent implements OnInit, AfterViewInit {
     this.currentSection = section;
   }
 
+  // ── RECRUTEMENT ──────────────────────────────────────────────────────────
+
+  loadMyJobOffers(): void {
+    this.jobsLoading = true;
+    this.jobService.getMyJobOffers().subscribe({
+      next: (res: any) => {
+        this.myJobOffers = (res.data || res || []) as JobOffer[];
+        this.jobsLoading = false;
+      },
+      error: () => { this.jobsLoading = false; }
+    });
+  }
+
+  deleteJobOffer(id: string): void {
+    if (!confirm('Supprimer cette offre ?')) return;
+    this.jobService.deleteJobOffer(id).subscribe({
+      next: () => this.loadMyJobOffers(),
+      error: () => alert('Erreur lors de la suppression')
+    });
+  }
+
+  navigateToCreateJob(): void {
+    this.router.navigate(['/jobs/create']);
+  }
+
+  navigateToEditJob(id: string): void {
+    this.router.navigate(['/jobs/edit', id]);
+  }
+
+  getJobStatusLabel(status: JobStatus): string {
+    const map: Record<string, string> = {
+      OPEN: 'Active', CLOSED: 'Fermée', FILLED: 'Pourvue'
+    };
+    return map[status] || status;
+  }
+
+  getJobStatusClass(status: JobStatus): string {
+    const map: Record<string, string> = {
+      OPEN: 'bg-green-100 text-green-700',
+      CLOSED: 'bg-gray-100 text-gray-700',
+      FILLED: 'bg-blue-100 text-blue-700'
+    };
+    return map[status] || 'bg-gray-100 text-gray-700';
+  }
+
+  getContractLabel(type: ContractType): string {
+    const map: Record<string, string> = {
+      FULL_TIME: 'Temps plein', PART_TIME: 'Temps partiel',
+      CONTRACT: 'Contrat', INTERNSHIP: 'Stage'
+    };
+    return map[type] || type;
+  }
+
+  // ── LOGISTIQUE ────────────────────────────────────────────────────────────
+
+  loadMyRoutes(): void {
+    this.routesLoading = true;
+    this.deliveryService.getMyFarmerOffers().subscribe({
+      next: (res: any) => {
+        this.myRoutes = (res.routes || res.data || res || []) as DeliveryRoute[];
+        this.routesLoading = false;
+      },
+      error: () => { this.routesLoading = false; }
+    });
+  }
+
+  openCreateOffer(): void {
+    this.offerForm = { destination: '', quantity: 0, quantityUnit: 'kg', scheduledDate: '', transportPrice: 0, description: '', destinationLat: 0, destinationLng: 0 };
+    this.showCreateOfferModal = true;
+  }
+
+  closeCreateOffer(): void {
+    this.showCreateOfferModal = false;
+  }
+
+  submitCreateOffer(): void {
+    if (!this.offerForm.destination || !this.offerForm.scheduledDate) return;
+    this.savingOffer = true;
+    const offerData: Partial<DeliveryRoute> = {
+      destination: this.offerForm.destination,
+      quantity: this.offerForm.quantity,
+      quantityUnit: this.offerForm.quantityUnit,
+      scheduledDate: this.offerForm.scheduledDate,
+      transportPrice: this.offerForm.transportPrice,
+      description: this.offerForm.description,
+      destinationLat: this.offerForm.destinationLat || undefined,
+      destinationLng: this.offerForm.destinationLng || undefined,
+      status: RouteStatus.PLANNED
+    };
+    this.deliveryService.createRoute(offerData as DeliveryRoute).subscribe({
+      next: () => {
+        this.savingOffer = false;
+        this.showCreateOfferModal = false;
+        this.loadMyRoutes();
+        this.toastService.success('Offre publiée avec succès !');
+      },
+      error: () => {
+        this.savingOffer = false;
+        this.toastService.error('Erreur lors de la publication.');
+      }
+    });
+  }
+
+  deleteOffer(id: string): void {
+    if (!confirm('Supprimer cette offre ?')) return;
+    this.deliveryService.deleteRoute(id).subscribe({
+      next: () => {
+        this.myRoutes = this.myRoutes.filter(r => r.id !== id);
+        this.toastService.success('Offre supprimée.');
+      },
+      error: () => this.toastService.error('Erreur lors de la suppression.')
+    });
+  }
+
+  viewApplications(route: DeliveryRoute): void {
+    this.selectedRouteForApplications = route;
+    this.showApplicationsModal = true;
+  }
+
+  closeApplicationsModal(): void {
+    this.showApplicationsModal = false;
+    this.selectedRouteForApplications = null;
+  }
+
+  acceptApplication(route: DeliveryRoute, index: number): void {
+    this.updatingAppIndex = index;
+    this.deliveryService.updateLogisticsApplicationStatus(route.id!, index, 'ACCEPTED').subscribe({
+      next: () => {
+        if (route.applications) route.applications[index].status = 'ACCEPTED' as any;
+        this.updatingAppIndex = null;
+        this.toastService.success('Candidature acceptée !');
+        this.loadMyRoutes();
+      },
+      error: () => { this.updatingAppIndex = null; }
+    });
+  }
+
+  rejectApplication(route: DeliveryRoute, index: number): void {
+    this.updatingAppIndex = index;
+    this.deliveryService.updateLogisticsApplicationStatus(route.id!, index, 'REJECTED').subscribe({
+      next: () => {
+        if (route.applications) route.applications[index].status = 'REJECTED' as any;
+        this.updatingAppIndex = null;
+        this.loadMyRoutes();
+      },
+      error: () => { this.updatingAppIndex = null; }
+    });
+  }
+
+  getOffersWithApplicants(): number {
+    return this.myRoutes.filter(r => (r.applications?.length || 0) > 0).length;
+  }
+
+  getRouteStatusLabel(status: RouteStatus | undefined): string {
+    const map: Record<string, string> = {
+      PLANNED: 'En attente', IN_PROGRESS: 'En cours',
+      COMPLETED: 'Terminée', CANCELLED: 'Annulée'
+    };
+    return map[status || ''] || 'Inconnu';
+  }
+
+  getRouteStatusClass(status: RouteStatus | undefined): string {
+    const map: Record<string, string> = {
+      PLANNED: 'bg-blue-100 text-blue-700',
+      IN_PROGRESS: 'bg-yellow-100 text-yellow-700',
+      COMPLETED: 'bg-green-100 text-green-700',
+      CANCELLED: 'bg-red-100 text-red-700'
+    };
+    return map[status || ''] || 'bg-gray-100 text-gray-700';
+  }
+
+  getRoutesCountByStatus(status: RouteStatus): number {
+    return this.myRoutes.filter(r => r.status === status).length;
+  }
+
+  getActiveJobsCount(): number {
+    return this.myJobOffers.filter(j => j.status === JobStatus.OPEN).length;
+  }
+
+  getTotalApplications(): number {
+    return this.myJobOffers.reduce((sum, j) => sum + (j.applications?.length || 0), 0);
+  }
+
+  // ── Map location handlers ─────────────────────────────────────────────────
+  onFarmLocationChanged(loc: MapLocation): void {
+    this.farmForm.farmLat = loc.lat;
+    this.farmForm.farmLng = loc.lng;
+    this.farmForm.farmAddress = loc.address || '';
+  }
+
+  onOfferLocationChanged(loc: MapLocation): void {
+    this.offerForm.destinationLat = loc.lat;
+    this.offerForm.destinationLng = loc.lng;
+    if (!this.offerForm.destination && loc.address) {
+      this.offerForm.destination = loc.address.split(',').slice(0, 2).join(',').trim();
+    }
+  }
+
+  getFarmLat(): number | undefined {
+    return (this.currentUser?.farmerProfile as any)?.farmLat || undefined;
+  }
+
+  getFarmLng(): number | undefined {
+    return (this.currentUser?.farmerProfile as any)?.farmLng || undefined;
+  }
+
+  getFarmAddress(): string {
+    return (this.currentUser?.farmerProfile as any)?.farmAddress || '';
+  }
+
+  // ── Farm edit ────────────────────────────────────────────────────────────
+  populateFarmForm(): void {
+    const fp = this.currentUser?.farmerProfile;
+    this.farmForm = {
+      farmName: fp?.farmName || '',
+      farmSize: fp?.farmSize || 0,
+      specialties: fp?.specialties?.join(', ') || '',
+      certifications: fp?.certifications || '',
+      description: fp?.description || '',
+      farmLat: (fp as any)?.farmLat || 0,
+      farmLng: (fp as any)?.farmLng || 0,
+      farmAddress: (fp as any)?.farmAddress || ''
+    };
+  }
+
+  toggleFarmEdit(): void {
+    this.editingFarm = !this.editingFarm;
+    if (this.editingFarm) this.populateFarmForm();
+  }
+
+  saveFarmInfo(): void {
+    this.savingFarm = true;
+    const fp = this.currentUser?.farmerProfile;
+    const updateData: any = {
+      farmerProfile: {
+        farmName: this.farmForm.farmName,
+        farmSize: this.farmForm.farmSize,
+        specialties: this.farmForm.specialties.split(',').map((s: string) => s.trim()).filter((s: string) => !!s),
+        certifications: this.farmForm.certifications,
+        description: this.farmForm.description,
+        rating: fp?.rating || 0,
+        totalReviews: fp?.totalReviews || 0,
+        farmImage: fp?.farmImage || '',
+        farmLat: this.farmForm.farmLat || null,
+        farmLng: this.farmForm.farmLng || null,
+        farmAddress: this.farmForm.farmAddress || ''
+      }
+    };
+    this.authService.updateProfile(updateData).subscribe({
+      next: () => {
+        this.currentUser = this.authService.getCurrentUser();
+        this.editingFarm = false;
+        this.savingFarm = false;
+        this.toastService.success('Informations de la ferme mises à jour !');
+      },
+      error: () => {
+        this.savingFarm = false;
+        this.toastService.error('Erreur lors de la sauvegarde.');
+      }
+    });
+  }
+
+  // ── Image uploads ─────────────────────────────────────────────────────────
+  getBannerStyle(): SafeStyle {
+    const img = this.currentUser?.farmerProfile?.farmImage;
+    const url = img ? img : 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200';
+    return this.sanitizer.bypassSecurityTrustStyle(`url(${url})`);
+  }
+
+  triggerBannerUpload(): void {
+    (document.getElementById('bannerInput') as HTMLInputElement)?.click();
+  }
+
+  triggerPhotoUpload(): void {
+    (document.getElementById('photoInput') as HTMLInputElement)?.click();
+  }
+
+  onBannerChange(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.savingBanner = true;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target?.result as string;
+      const fp = this.currentUser?.farmerProfile;
+      const updateData: any = {
+        farmerProfile: { ...(fp as any), farmImage: base64 }
+      };
+      this.authService.updateProfile(updateData).subscribe({
+        next: () => {
+          this.currentUser = this.authService.getCurrentUser();
+          this.savingBanner = false;
+          this.toastService.success('Bannière mise à jour !');
+        },
+        error: (err: any) => {
+          this.savingBanner = false;
+          this.toastService.error(err?.error?.message || 'Erreur lors de la mise à jour de la bannière');
+        }
+      });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  onProfilePhotoChange(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.savingPhoto = true;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target?.result as string;
+      this.authService.updateProfile({ profileImage: base64 }).subscribe({
+        next: () => {
+          this.currentUser = this.authService.getCurrentUser();
+          this.savingPhoto = false;
+          this.toastService.success('Photo de profil mise à jour !');
+        },
+        error: () => { this.savingPhoto = false; }
+      });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ── Account ───────────────────────────────────────────────────────────────
+  deactivateAccount(): void {
+    if (!confirm('Êtes-vous sûr de vouloir désactiver votre compte ?')) return;
+    this.authService.deactivateAccount().subscribe({
+      next: () => this.router.navigate(['/auth/login']),
+      error: () => this.toastService.error('Erreur lors de la désactivation.')
+    });
+  }
+
   logout(): void {
     this.authService.logout();
-    this.router.navigate(['/']);
+    window.location.href = '/';
+  }
+
+  // ── GPS Live Location Sharing ────────────────────────────────────────────
+  isDelivering(order: Order): boolean {
+    return order.status === 'SHIPPED' || order.status === 'PROCESSING';
+  }
+
+  startLocationShare(orderId: string): void {
+    this.stopLocationShare();
+    if (!navigator.geolocation) {
+      this.toastService.error('La géolocalisation n\'est pas supportée par votre navigateur.');
+      return;
+    }
+    this.sharingOrderId = orderId;
+    const sendPosition = () => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          this.orderService.updateOrderDriverLocation(orderId, pos.coords.latitude, pos.coords.longitude).subscribe();
+        },
+        () => { /* silently ignore GPS errors */ }
+      );
+    };
+    sendPosition(); // send immediately
+    this.locationShareTimer = setInterval(sendPosition, 15000);
+    this.toastService.success('Partage de position démarré. Le client peut maintenant vous suivre en direct.');
+  }
+
+  stopLocationShare(): void {
+    if (this.locationShareTimer) {
+      clearInterval(this.locationShareTimer);
+      this.locationShareTimer = null;
+    }
+    this.sharingOrderId = null;
+  }
+
+  ngOnDestroy(): void {
+    this.stopLocationShare();
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap } from 'rxjs';
+import { Observable, BehaviorSubject, tap, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { LoginRequest, SignupRequest, AuthResponse, User, UpdateProfileRequest, ChangePasswordRequest } from '../models/user.model';
 
@@ -21,11 +21,16 @@ export class AuthService {
       tap(response => this.handleAuthResponse(response))
     );
   }
-  
-  signup(data: SignupRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/signup`, data).pipe(
+
+  loginWithGoogle(idToken: string, role: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/google`, { token: idToken, role }).pipe(
       tap(response => this.handleAuthResponse(response))
     );
+  }
+  
+  signup(data: SignupRequest): Observable<AuthResponse> {
+    // Ne pas auto-connecter après inscription — l'utilisateur doit se connecter manuellement
+    return this.http.post<AuthResponse>(`${this.apiUrl}/signup`, data);
   }
   
   logout(): void {
@@ -76,7 +81,8 @@ export class AuthService {
   }
 
   updateProfile(data: UpdateProfileRequest): Observable<User> {
-    return this.http.put<User>(`${environment.apiUrl}/users/profile`, data).pipe(
+    return this.http.put<any>(`${environment.apiUrl}/users/profile`, data).pipe(
+      map(response => (response && response.data ? response.data : response) as User),
       tap(user => {
         const updatedUser = {
           ...this.currentUserSubject.value,
@@ -90,5 +96,11 @@ export class AuthService {
 
   changePassword(data: ChangePasswordRequest): Observable<any> {
     return this.http.put(`${environment.apiUrl}/users/change-password`, data);
+  }
+
+  deactivateAccount(): Observable<any> {
+    return this.http.put<any>(`${environment.apiUrl}/users/profile`, { isActive: false }).pipe(
+      tap(() => this.logout())
+    );
   }
 }

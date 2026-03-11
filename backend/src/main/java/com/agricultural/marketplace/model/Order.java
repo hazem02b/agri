@@ -52,7 +52,12 @@ public class Order {
     private LocalDateTime actualDeliveryDate;
     
     private List<OrderTracking> trackingHistory = new ArrayList<>();
-    
+
+    // Live driver location tracking
+    private Double driverCurrentLat;
+    private Double driverCurrentLng;
+    private String lastDriverLocationUpdate;
+
     @CreatedDate
     private LocalDateTime createdAt;
     

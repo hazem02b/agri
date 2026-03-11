@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { JobService } from '../../core/services/job.service';
 import { JobOffer, JobType, ContractType, JobStatus } from '../../core/models/job.model';
+import { MapPickerComponent, MapLocation } from '../../shared/components/map-picker/map-picker.component';
 
 @Component({
   selector: 'app-job-create',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MapPickerComponent],
   template: `
     <div class="min-h-screen bg-gray-50 py-8">
       <div class="max-w-3xl mx-auto px-4">
@@ -71,6 +72,17 @@ import { JobOffer, JobType, ContractType, JobStatus } from '../../core/models/jo
                 <input type="number" [(ngModel)]="job.positions" name="positions" min="1" required
                        class="w-full border border-gray-300 rounded-lg px-4 py-2">
               </div>
+            </div>
+
+            <!-- Location map picker -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">📍 Position exacte sur la carte (optionnel)</label>
+              <app-map-picker
+                [initialLat]="job.locationLat"
+                [initialLng]="job.locationLng"
+                height="240px"
+                (locationChanged)="onJobLocationChanged($event)">
+              </app-map-picker>
             </div>
 
             <!-- Salary Range -->
@@ -196,6 +208,14 @@ export class JobCreateComponent implements OnInit {
       },
       error: (error) => console.error('Error loading job:', error)
     });
+  }
+
+  onJobLocationChanged(loc: MapLocation): void {
+    this.job.locationLat = loc.lat;
+    this.job.locationLng = loc.lng;
+    if (!this.job.location && loc.address) {
+      this.job.location = loc.address.split(',').slice(0, 2).join(',').trim();
+    }
   }
 
   saveJob() {

@@ -94,8 +94,9 @@ export class GeolocationService {
    * Convertit un nom de ville/région en coordonnées GPS
    */
   getCoordinatesFromLocation(location: string): Coordinates | null {
+    if (!location) return this.locationMap['tunis'];
     const locationLower = location.toLowerCase().trim();
-    
+    if (!locationLower) return this.locationMap['tunis'];
     // Chercher une correspondance exacte
     if (this.locationMap[locationLower]) {
       return this.locationMap[locationLower];

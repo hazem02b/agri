@@ -1,12 +1,29 @@
 export interface DeliveryRoute {
   id?: string;
-  driverId: string;
-  driverName: string;
-  vehicleType: string;
-  vehicleNumber: string;
-  stops: DeliveryStop[];
-  status: RouteStatus;
-  scheduledDate: Date | string;
+  // Farmer who posted the offer
+  farmerId?: string;
+  farmerName?: string;
+  // Offer details
+  description?: string;
+  destination?: string;
+  destinationLat?: number;
+  destinationLng?: number;
+  quantity?: number;
+  quantityUnit?: string;
+  transportPrice?: number;
+  // Driver tracking
+  driverCurrentLat?: number;
+  driverCurrentLng?: number;
+  lastLocationUpdate?: string;
+  // Driver (set after acceptance)
+  driverId?: string;
+  driverName?: string;
+  vehicleType?: string;
+  vehicleNumber?: string;
+  stops?: DeliveryStop[];
+  applications?: LogisticsApplication[];
+  status?: RouteStatus;
+  scheduledDate?: Date | string;
   startedAt?: Date | string;
   completedAt?: Date | string;
   totalDistance?: number;
@@ -42,4 +59,24 @@ export enum StopStatus {
   DELIVERED = 'DELIVERED',
   FAILED = 'FAILED',
   RESCHEDULED = 'RESCHEDULED'
+}
+
+export interface LogisticsApplication {
+  applicantId?: string;
+  applicantName?: string;
+  applicantEmail?: string;
+  applicantPhone?: string;
+  message?: string;
+  vehicleType?: string;
+  licenseNumber?: string;
+  status?: LogisticsAppStatus;
+  appliedAt?: string;
+  notes?: string;
+}
+
+export enum LogisticsAppStatus {
+  PENDING = 'PENDING',
+  REVIEWED = 'REVIEWED',
+  ACCEPTED = 'ACCEPTED',
+  REJECTED = 'REJECTED'
 }

@@ -139,6 +139,24 @@
             </a>
           </p>
         </div>
+
+        <!-- Divider -->
+        <div class="relative my-2">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-gray-200"></div>
+          </div>
+          <div class="relative flex justify-center text-sm">
+            <span class="px-3 bg-gray-50 text-gray-500">ou continuer avec</span>
+          </div>
+        </div>
+
+        <!-- Google Sign-In Button -->
+        <div class="flex flex-col items-center gap-2">
+          <p class="text-xs text-gray-500 text-center">
+            Rôle sélectionné : <strong>{{ userRole === 'BUYER' ? 'Acheteur' : 'Agriculteur' }}</strong> — modifiez-le avant de vous connecter avec Google
+          </p>
+          <div #googleBtnContainer class="w-full flex justify-center"></div>
+        </div>
       </form>
     </div>
   </div>

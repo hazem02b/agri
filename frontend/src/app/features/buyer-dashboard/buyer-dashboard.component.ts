@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
@@ -67,17 +67,17 @@ export class BuyerDashboardComponent implements OnInit {
       case OrderStatus.PENDING:
         return 'En attente';
       case OrderStatus.CONFIRMED:
-        return 'Confirmée';
+        return 'ConfirmÃ©e';
       case OrderStatus.PROCESSING:
-        return 'En préparation';
+        return 'En prÃ©paration';
       case OrderStatus.SHIPPED:
-        return 'Expédiée';
+        return 'ExpÃ©diÃ©e';
       case OrderStatus.DELIVERED:
-        return 'Livrée';
+        return 'LivrÃ©e';
       case OrderStatus.CANCELLED:
-        return 'Annulée';
+        return 'AnnulÃ©e';
       case OrderStatus.REFUNDED:
-        return 'Remboursée';
+        return 'RemboursÃ©e';
       default:
         return status;
     }

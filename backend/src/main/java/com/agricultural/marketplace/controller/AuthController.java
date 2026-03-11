@@ -9,15 +9,16 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class AuthController {
-    
+
     @Autowired
     private AuthService authService;
-    
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
         try {
@@ -28,7 +29,7 @@ public class AuthController {
                     .body(new ApiResponse(false, "Invalid credentials: " + e.getMessage()));
         }
     }
-    
+
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@Valid @RequestBody SignupRequest signupRequest) {
         try {
@@ -39,21 +40,72 @@ public class AuthController {
                     .body(new ApiResponse(false, "Signup failed: " + e.getMessage()));
         }
     }
-    
-    @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@RequestBody java.util.Map<String, String> request) {
+
+    @PostMapping("/google")
+    public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> body) {
         try {
-            String email = request.get("email");
-            if (email == null || email.trim().isEmpty()) {
-                return ResponseEntity.badRequest()
-                        .body(new ApiResponse(false, "Email is required"));
-            }
-            // TODO: Implement email sending logic
-            // For now, just return success
-            return ResponseEntity.ok(new ApiResponse(true, "Password reset email sent successfully"));
+            String token = body.get("token");
+            String role = body.get("role");
+            AuthResponse response = authService.googleLogin(token, role);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse(false, "Failed to send reset email: " + e.getMessage()));
+                    .body(new ApiResponse(false, "Google authentication failed: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
+        try {
+            String emailOrPhone = request.get("email");
+            if (emailOrPhone == null || emailOrPhone.trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(new ApiResponse(false, "Email ou telephone requis"));
+            }
+            String code = authService.sendPasswordResetCode(emailOrPhone.trim());
+            return ResponseEntity.ok(Map.of("success", true, "code", code, "message", "Code genere avec succes"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse(false, e.getMessage()));
+        }
+    }
+
+    @PostMapping("/verify-reset-code")
+    public ResponseEntity<?> verifyResetCode(@RequestBody Map<String, String> request) {
+        try {
+            String email = request.get("email");
+            String code = request.get("code");
+            if (email == null || code == null) {
+                return ResponseEntity.badRequest()
+                        .body(new ApiResponse(false, "Email et code requis"));
+            }
+            authService.verifyCodeAndResetPassword(email.trim().toLowerCase(), code.trim(), null);
+            return ResponseEntity.ok(new ApiResponse(true, "Code valide"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse(false, e.getMessage()));
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
+        try {
+            String email = request.get("email");
+            String code = request.get("code");
+            String newPassword = request.get("newPassword");
+            if (email == null || code == null || newPassword == null) {
+                return ResponseEntity.badRequest()
+                        .body(new ApiResponse(false, "Email, code et nouveau mot de passe requis"));
+            }
+            if (newPassword.length() < 6) {
+                return ResponseEntity.badRequest()
+                        .body(new ApiResponse(false, "Le mot de passe doit contenir au moins 6 caracteres"));
+            }
+            authService.verifyCodeAndResetPassword(email.trim().toLowerCase(), code.trim(), newPassword);
+            return ResponseEntity.ok(new ApiResponse(true, "Mot de passe reinitialise avec succes"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse(false, e.getMessage()));
         }
     }
 }

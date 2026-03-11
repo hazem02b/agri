@@ -82,6 +82,10 @@ public class User {
         private Double rating = 0.0;
         private Integer totalReviews = 0;
         private String farmImage;
+        private Double farmSize = 0.0;
         private List<String> specialties = new ArrayList<>();
+        private Double farmLat;
+        private Double farmLng;
+        private String farmAddress;
     }
 }

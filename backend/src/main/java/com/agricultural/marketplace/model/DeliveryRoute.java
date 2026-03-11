@@ -21,18 +21,36 @@ public class DeliveryRoute {
     @Id
     private String id;
     
+    // Farmer who posted the offer
+    private String farmerId;
+    private String farmerName;
+
+    // Offer details
+    private String description;
+    private String destination;
+    private Double destinationLat;
+    private Double destinationLng;
+    private Double quantity;
+    private String quantityUnit; // kg, tonne, caisses, pièces
+    private Double transportPrice; // in TND
+
+    // Driver tracking
+    private Double driverCurrentLat;
+    private Double driverCurrentLng;
+    private String lastLocationUpdate;
+
+    // Driver assigned after acceptance
     private String driverId;
-    
     private String driverName;
-    
     private String vehicleType;
-    
     private String vehicleNumber;
-    
+
     private List<DeliveryStop> stops = new ArrayList<>();
     
+private List<LogisticsApplication> applications = new ArrayList<>();
+
     private RouteStatus status;
-    
+
     private LocalDateTime scheduledDate;
     
     private LocalDateTime startedAt;
@@ -78,6 +96,29 @@ public class DeliveryRoute {
             DELIVERED,
             FAILED,
             RESCHEDULED
+        }
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class LogisticsApplication {
+        private String applicantId;
+        private String applicantName;
+        private String applicantEmail;
+        private String applicantPhone;
+        private String message;
+        private String vehicleType;
+        private String licenseNumber;
+        private ApplicationStatus status = ApplicationStatus.PENDING;
+        private String appliedAt;
+        private String notes;
+
+        public enum ApplicationStatus {
+            PENDING,
+            REVIEWED,
+            ACCEPTED,
+            REJECTED
         }
     }
 }

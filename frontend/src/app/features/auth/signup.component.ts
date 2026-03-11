@@ -1,10 +1,9 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, Router } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
-import { LoginRequest } from '../../core/models/user.model';
 
 @Component({
   selector: 'app-signup',
@@ -38,8 +37,7 @@ export class SignupComponent {
 
   constructor(
     private authService: AuthService,
-    private toastService: ToastService,
-    private router: Router
+    private toastService: ToastService
   ) {}
 
   nextStep(): void {
@@ -121,23 +119,8 @@ export class SignupComponent {
     this.authService.signup(signupData).subscribe({
       next: (response) => {
         this.loading = false;
-        this.toastService.success('Inscription réussie ! Bienvenue sur la plateforme.');
-        // Auto-login after signup
-        const credentials: LoginRequest = {
-          email: this.email,
-          password: this.password
-        };
-        this.authService.login(credentials).subscribe({
-          next: () => {
-            if (this.userType === 'FARMER') {
-              this.router.navigate(['/farmer-dashboard']);
-            } else if (this.userType === 'BUYER') {
-              this.router.navigate(['/buyer-dashboard']);
-            } else {
-              this.router.navigate(['/marketplace']);
-            }
-          }
-        });
+        this.toastService.success('Compte créé avec succès ! Connectez-vous pour accéder à la plateforme.');
+        setTimeout(() => { window.location.href = '/auth/login'; }, 1500);
       },
       error: (error) => {
         this.loading = false;

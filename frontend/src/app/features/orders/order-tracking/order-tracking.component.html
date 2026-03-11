@@ -78,6 +78,11 @@
               class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
               Voir les détails
             </button>
+            <button *ngIf="isTrackable(order)"
+              (click)="viewOrderDetails(order); startTracking(order)"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-1">
+              📍 Suivre
+            </button>
             <button 
               (click)="reorder(order)"
               class="px-4 py-2 border border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition">
@@ -159,17 +164,74 @@
             </div>
           </div>
 
+          <!-- Live delivery map tracking -->
+          <div>
+            <h3 class="text-lg font-bold text-gray-900 mb-3">🗺️ Suivi de livraison en direct</h3>
+
+            <!-- Map (shown when destination is geocoded) -->
+            <div *ngIf="destinationLat && destinationLng">
+              <app-map-view
+                [lat]="destinationLat"
+                [lng]="destinationLng"
+                [label]="selectedOrder.deliveryAddress?.city || 'Adresse de livraison'"
+                [driverLat]="driverLat || undefined"
+                [driverLng]="driverLng || undefined"
+                height="280px">
+              </app-map-view>
+
+              <!-- Driver position info -->
+              <div *ngIf="driverLat && driverLng" class="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="inline-block w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
+                  <span class="text-sm text-green-700 font-medium">🚚 Livreur en route — position en temps réel</span>
+                </div>
+                <button (click)="stopTracking()" class="text-xs text-red-500 underline">Arrêter</button>
+              </div>
+              <div *ngIf="!driverLat && trackingActive && trackingOrderId === selectedOrder.id"
+                   class="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center gap-2">
+                <span class="inline-block w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse"></span>
+                <span class="text-sm text-yellow-700">En attente de la position du livreur...</span>
+              </div>
+            </div>
+
+            <!-- Geocoding in progress -->
+            <div *ngIf="geocodingInProgress" class="text-center py-6 text-gray-500 text-sm">
+              <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-green-600 mb-2"></div>
+              <p>Chargement de la carte...</p>
+            </div>
+
+            <!-- Tracking action buttons -->
+            <div class="mt-3 space-y-2">
+              <button *ngIf="isTrackable(selectedOrder) && (!trackingActive || trackingOrderId !== selectedOrder.id)"
+                      (click)="startTracking(selectedOrder)"
+                      class="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium flex items-center justify-center gap-2">
+                📍 Suivre ma livraison en direct
+              </button>
+              <button *ngIf="trackingActive && trackingOrderId === selectedOrder.id"
+                      (click)="stopTracking()"
+                      class="w-full py-3 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 font-medium">
+                ⏹ Arrêter le suivi
+              </button>
+              <div *ngIf="!isTrackable(selectedOrder)" class="text-center py-3 text-sm text-gray-500 bg-gray-50 rounded-lg">
+                <span *ngIf="selectedOrder.status === 'DELIVERED'">✅ Commande livrée</span>
+                <span *ngIf="selectedOrder.status !== 'DELIVERED' && selectedOrder.status !== 'SHIPPED' && selectedOrder.status !== 'PROCESSING'">
+                  Le suivi en direct sera disponible quand votre commande sera en cours de livraison.
+                </span>
+              </div>
+            </div>
+          </div>
+
           <!-- Payment info -->
           <div>
             <h3 class="text-lg font-bold text-gray-900 mb-4">Détails de paiement</h3>
             <div class="space-y-2">
               <div class="flex justify-between text-gray-600">
                 <span>Sous-total</span>
-                <span>{{ selectedOrder.totalAmount - 7 }} TND</span>
+                <span>{{ getItemsSubtotal(selectedOrder) }} TND</span>
               </div>
               <div class="flex justify-between text-gray-600">
                 <span>Frais de livraison</span>
-                <span>7.00 TND</span>
+                <span>{{ getDeliveryFee(selectedOrder) > 0 ? getDeliveryFee(selectedOrder).toFixed(2) + ' TND' : 'Gratuit' }}</span>
               </div>
               <div class="flex justify-between text-xl font-bold text-gray-900 pt-2 border-t border-gray-300">
                 <span>Total</span>

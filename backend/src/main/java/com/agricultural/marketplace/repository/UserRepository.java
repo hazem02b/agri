@@ -10,6 +10,7 @@ import java.util.List;
 @Repository
 public interface UserRepository extends MongoRepository<User, String> {
     Optional<User> findByEmail(String email);
+    Optional<User> findByPhone(String phone);
     Boolean existsByEmail(String email);
     List<User> findByRole(User.UserRole role);
     Long countByRole(User.UserRole role);

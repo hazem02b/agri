@@ -11,7 +11,9 @@ import java.util.List;
 public interface DeliveryRouteRepository extends MongoRepository<DeliveryRoute, String> {
     
     List<DeliveryRoute> findByDriverId(String driverId);
-    
+
+    List<DeliveryRoute> findByFarmerId(String farmerId);
+
     List<DeliveryRoute> findByStatus(DeliveryRoute.RouteStatus status);
     
     List<DeliveryRoute> findByScheduledDateBetween(LocalDateTime start, LocalDateTime end);

@@ -3,6 +3,7 @@ package com.agricultural.marketplace.service;
 import com.agricultural.marketplace.model.Conversation;
 import com.agricultural.marketplace.repository.ConversationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -14,6 +15,9 @@ public class MessageService {
     
     @Autowired
     private ConversationRepository conversationRepository;
+
+    @Autowired(required = false)
+    private SimpMessagingTemplate messagingTemplate;
     
     /**
      * Get all conversations for a user (as customer or farmer)
@@ -85,10 +89,17 @@ public class MessageService {
         // Add message to conversation
         conversation.getMessages().add(message);
         conversation.setLastMessageAt(LocalDateTime.now());
-        
-        return conversationRepository.save(conversation);
+
+        Conversation saved = conversationRepository.save(conversation);
+
+        // Broadcast new message via WebSocket to all subscribers
+        if (messagingTemplate != null) {
+            messagingTemplate.convertAndSend("/topic/conversation/" + conversationId, message);
+        }
+
+        return saved;
     }
-    
+
     /**
      * Mark all messages in a conversation as read for a user
      */

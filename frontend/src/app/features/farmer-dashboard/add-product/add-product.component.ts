@@ -28,8 +28,16 @@ export class AddProductComponent implements OnInit {
     category: undefined,
     images: [],
     isOrganic: false,
-    isAvailable: true
+    isAvailable: true,
+    location: ''
   };
+
+  tunisianCities = [
+    'Tunis', 'Ariana', 'Ben Arous', 'Manouba', 'Nabeul', 'Cap Bon',
+    'Zaghouan', 'Bizerte', 'Béja', 'Jendouba', 'Kef', 'Siliana',
+    'Sousse', 'Monastir', 'Mahdia', 'Sfax', 'Kairouan', 'Kasserine',
+    'Sidi Bouzid', 'Gabès', 'Médenine', 'Tataouine', 'Gafsa', 'Tozeur', 'Kébili'
+  ];
 
   categories = [
     { value: 'FRUITS', label: '🍎 Fruits' },
@@ -106,8 +114,9 @@ export class AddProductComponent implements OnInit {
 
   onSubmit(): void {
     // Validation
-    if (!this.product.name || !this.product.description || !this.product.price || 
-        !this.product.stock || !this.product.category) {
+    if (!this.product.name || !this.product.description || !this.product.category ||
+        this.product.price === undefined || this.product.price === null ||
+        this.product.stock === undefined || this.product.stock === null) {
       this.toastService.warning('Veuillez remplir tous les champs obligatoires');
       return;
     }
@@ -147,7 +156,8 @@ export class AddProductComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error creating product', error);
-          this.toastService.error('Erreur lors de l\'ajout du produit');
+          const msg = error?.error?.message || error?.message || 'Erreur inconnue';
+          this.toastService.error(`Erreur lors de l'ajout du produit: ${msg}`);
           this.loading = false;
         }
       });
