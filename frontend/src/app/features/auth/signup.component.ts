@@ -110,7 +110,7 @@ export class SignupComponent {
       email: this.email,
       phone: this.phone,
       password: this.password,
-      role: this.userType
+      role: this.userType === 'BUYER' ? 'CUSTOMER' : this.userType
     };
 
     if (this.userType === 'FARMER') {
