@@ -18,9 +18,7 @@ import { MapPickerComponent, MapLocation } from '../../shared/components/map-pic
         </button>
 
         <div class="bg-white rounded-lg shadow-lg p-8">
-          <h1 class="text-3xl font-bold text-gray-900 mb-6">
-            {{isEditMode ? 'Modifier l\'offre' : 'Publier une nouvelle offre'}}
-          </h1>
+          <h1 class="text-3xl font-bold text-gray-900 mb-6">{{ pageTitle }}</h1>
 
           <form (ngSubmit)="saveJob()" class="space-y-6">
             <!-- Title -->
@@ -176,6 +174,10 @@ export class JobCreateComponent implements OnInit {
   deadlineDate = '';
   isEditMode = false;
   saving = false;
+
+  get pageTitle(): string {
+    return this.isEditMode ? "Modifier l'offre" : 'Publier une nouvelle offre';
+  }
 
   jobTypes = Object.values(JobType);
   contractTypes = Object.values(ContractType);

@@ -120,6 +120,18 @@ input:-webkit-autofill:focus {
   animation: pulseRing 2s ease-in-out infinite;
 }
 
+/* Leaflet layering: keep map layers below app UI sections/modals */
+.leaflet-container {
+  z-index: 0;
+}
+
+.leaflet-pane,
+.leaflet-top,
+.leaflet-bottom,
+.leaflet-control {
+  z-index: 10;
+}
+
 /* Utility classes used across redesigned pages */
 @layer components {
   /* Consistent card style */
