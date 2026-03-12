@@ -64,22 +64,14 @@ export class BuyerDashboardComponent implements OnInit {
 
   getStatusLabel(status: OrderStatus): string {
     switch (status) {
-      case OrderStatus.PENDING:
-        return 'En attente';
-      case OrderStatus.CONFIRMED:
-        return 'ConfirmÃ©e';
-      case OrderStatus.PROCESSING:
-        return 'En prÃ©paration';
-      case OrderStatus.SHIPPED:
-        return 'ExpÃ©diÃ©e';
-      case OrderStatus.DELIVERED:
-        return 'LivrÃ©e';
-      case OrderStatus.CANCELLED:
-        return 'AnnulÃ©e';
-      case OrderStatus.REFUNDED:
-        return 'RemboursÃ©e';
-      default:
-        return status;
+      case OrderStatus.PENDING:    return 'En attente';
+      case OrderStatus.CONFIRMED:  return 'Confirmée';
+      case OrderStatus.PROCESSING: return 'En préparation';
+      case OrderStatus.SHIPPED:    return 'Expédiée';
+      case OrderStatus.DELIVERED:  return 'Livrée';
+      case OrderStatus.CANCELLED:  return 'Annulée';
+      case OrderStatus.REFUNDED:   return 'Remboursée';
+      default: return status;
     }
   }
 

@@ -1,33 +1,366 @@
-<div class="min-h-screen bg-gray-50 py-8">
-  <div class="max-w-7xl mx-auto px-4">
-    <!-- Progress Steps -->
-    <div class="mb-8">
-      <div class="flex items-center justify-center gap-4">
+<div class="min-h-screen bg-gray-50">
+
+  <!-- HEADER with Steps -->
+  <div class="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-20">
+    <div class="max-w-5xl mx-auto px-4 py-4">
+      <div class="flex items-center justify-center gap-0">
+        <!-- Step 1 -->
         <div class="flex items-center">
-          <div [class]="currentStep === 'cart' ? 'w-10 h-10 bg-green-600 text-white' : 'w-10 h-10 bg-gray-300 text-gray-600'" 
-               class="rounded-full flex items-center justify-center font-semibold">
-            1
+          <div class="flex items-center gap-2">
+            <div [ngClass]="currentStep === 'cart' ? 'bg-green-600 text-white ring-4 ring-green-100' : (currentStep === 'delivery' || currentStep === 'payment') ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'"
+                 class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all">
+              <svg *ngIf="currentStep !== 'cart'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              <span *ngIf="currentStep === 'cart'">1</span>
+            </div>
+            <span [ngClass]="currentStep === 'cart' ? 'text-green-700 font-bold' : 'text-gray-400'" class="text-sm hidden sm:block">Panier</span>
           </div>
-          <span [class]="currentStep === 'cart' ? 'text-green-600 font-semibold' : 'text-gray-600'" class="ml-2">Panier</span>
         </div>
-        <div class="w-20 h-1 bg-gray-300"></div>
+        <div [ngClass]="(currentStep === 'delivery' || currentStep === 'payment') ? 'bg-green-500' : 'bg-gray-200'" class="w-16 sm:w-24 h-0.5 mx-2 transition-all"></div>
+        <!-- Step 2 -->
         <div class="flex items-center">
-          <div [class]="currentStep === 'delivery' ? 'w-10 h-10 bg-green-600 text-white' : 'w-10 h-10 bg-gray-300 text-gray-600'" 
-               class="rounded-full flex items-center justify-center font-semibold">
-            2
+          <div class="flex items-center gap-2">
+            <div [ngClass]="currentStep === 'delivery' ? 'bg-green-600 text-white ring-4 ring-green-100' : currentStep === 'payment' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'"
+                 class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all">
+              <svg *ngIf="currentStep === 'payment'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              <span *ngIf="currentStep !== 'payment'">2</span>
+            </div>
+            <span [ngClass]="currentStep === 'delivery' ? 'text-green-700 font-bold' : 'text-gray-400'" class="text-sm hidden sm:block">Livraison</span>
           </div>
-          <span [class]="currentStep === 'delivery' ? 'text-green-600 font-semibold' : 'text-gray-600'" class="ml-2">Livraison</span>
         </div>
-        <div class="w-20 h-1 bg-gray-300"></div>
+        <div [ngClass]="currentStep === 'payment' ? 'bg-green-500' : 'bg-gray-200'" class="w-16 sm:w-24 h-0.5 mx-2 transition-all"></div>
+        <!-- Step 3 -->
         <div class="flex items-center">
-          <div [class]="currentStep === 'payment' ? 'w-10 h-10 bg-green-600 text-white' : 'w-10 h-10 bg-gray-300 text-gray-600'" 
-               class="rounded-full flex items-center justify-center font-semibold">
-            3
+          <div class="flex items-center gap-2">
+            <div [ngClass]="currentStep === 'payment' ? 'bg-green-600 text-white ring-4 ring-green-100' : 'bg-gray-200 text-gray-500'"
+                 class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all">
+              3
+            </div>
+            <span [ngClass]="currentStep === 'payment' ? 'text-green-700 font-bold' : 'text-gray-400'" class="text-sm hidden sm:block">Paiement</span>
           </div>
-          <span [class]="currentStep === 'payment' ? 'text-green-600 font-semibold' : 'text-gray-600'" class="ml-2">Paiement</span>
         </div>
       </div>
     </div>
+  </div>
+
+  <div class="max-w-5xl mx-auto px-4 py-8">
+
+    <!-- ══ STEP 1: CART ══════════════════════════════════════ -->
+    <div *ngIf="currentStep === 'cart'">
+      <h1 class="text-2xl font-extrabold text-gray-900 mb-6">
+        Mon Panier
+        <span class="ml-2 text-base font-semibold text-gray-400">({{ cartItems.length }} article{{ cartItems.length > 1 ? 's' : '' }})</span>
+      </h1>
+
+      <!-- Empty Cart -->
+      <div *ngIf="cartItems.length === 0" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-16 text-center">
+        <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-10 h-10 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        </div>
+        <h2 class="text-xl font-bold text-gray-900 mb-2">Votre panier est vide</h2>
+        <p class="text-gray-500 text-sm mb-6">Découvrez nos produits frais et locaux</p>
+        <button (click)="continueShopping()"
+          class="inline-flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold transition">
+          Voir le marché
+        </button>
+      </div>
+
+      <!-- Cart Items -->
+      <div *ngIf="cartItems.length > 0" class="grid lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 space-y-3">
+          <div *ngFor="let item of cartItems"
+               class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex gap-4 hover:shadow-md transition-shadow">
+            <!-- Image -->
+            <div class="w-20 h-20 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
+              <img *ngIf="item.product.images?.length" [src]="item.product.images[0]" [alt]="item.product.name" class="w-full h-full object-cover">
+              <div *ngIf="!item.product.images?.length" class="w-full h-full flex items-center justify-center">
+                <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              </div>
+            </div>
+            <!-- Info -->
+            <div class="flex-1 min-w-0">
+              <h3 class="font-bold text-gray-900 truncate">{{ item.product.name }}</h3>
+              <p class="text-xs text-gray-400 mt-0.5">{{ item.product.category }}</p>
+              <p class="text-green-700 font-bold mt-1">{{ item.product.price | number:'1.2-2' }} TND <span class="font-normal text-gray-400 text-xs">/ {{ item.product.unit }}</span></p>
+            </div>
+            <!-- Controls -->
+            <div class="flex flex-col items-end justify-between">
+              <button (click)="removeItem(item.product.id)"
+                class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+              <div class="flex items-center border border-gray-200 rounded-xl overflow-hidden">
+                <button (click)="updateQuantity(item.product.id, item.quantity - 1)" [disabled]="item.quantity <= 1"
+                  class="w-8 h-8 flex items-center justify-center hover:bg-gray-50 disabled:opacity-40 font-bold text-gray-700">−</button>
+                <span class="w-9 text-center text-sm font-bold text-gray-900">{{ item.quantity }}</span>
+                <button (click)="updateQuantity(item.product.id, item.quantity + 1)" [disabled]="item.quantity >= item.product.stock"
+                  class="w-8 h-8 flex items-center justify-center hover:bg-gray-50 disabled:opacity-40 font-bold text-gray-700">+</button>
+              </div>
+              <p class="text-sm font-bold text-gray-900">{{ (item.product.price * item.quantity) | number:'1.2-2' }} TND</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="lg:col-span-1">
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sticky top-24">
+            <h2 class="font-bold text-gray-900 mb-4">Résumé</h2>
+            <div class="space-y-2 mb-4 pb-4 border-b border-gray-100">
+              <div class="flex justify-between text-sm text-gray-500">
+                <span>Sous-total</span>
+                <span class="font-semibold text-gray-800">{{ getSubtotal() | number:'1.2-2' }} TND</span>
+              </div>
+              <div class="flex justify-between text-sm text-gray-500">
+                <span>Livraison</span>
+                <span class="font-medium text-gray-400 text-xs">À calculer</span>
+              </div>
+            </div>
+            <div class="flex justify-between font-extrabold text-lg text-gray-900 mb-6">
+              <span>Total estimé</span>
+              <span class="text-green-700">{{ getSubtotal() | number:'1.2-2' }} TND</span>
+            </div>
+            <button (click)="proceedToDelivery()"
+              class="w-full py-3.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-sm transition flex items-center justify-center gap-2">
+              Continuer
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </button>
+            <button (click)="continueShopping()"
+              class="w-full py-3 mt-2 text-sm text-gray-500 hover:text-green-700 font-medium transition">
+              ← Continuer mes achats
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ STEP 2: DELIVERY ══════════════════════════════════ -->
+    <div *ngIf="currentStep === 'delivery'">
+      <h1 class="text-2xl font-extrabold text-gray-900 mb-6">Informations de livraison</h1>
+
+      <div class="grid lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 space-y-5">
+          <!-- Delivery Method -->
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <h3 class="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wide">Mode de livraison</h3>
+            <div class="grid grid-cols-2 gap-3">
+              <button (click)="deliveryForm.deliveryMethod = 'livraison'; onDeliveryMethodChange()"
+                [ngClass]="deliveryForm.deliveryMethod === 'livraison' ? 'border-green-500 bg-green-50 ring-2 ring-green-200' : 'border-gray-200 hover:border-green-300'"
+                class="border-2 rounded-xl p-4 text-left transition-all">
+                <div class="w-9 h-9 bg-green-100 rounded-lg flex items-center justify-center mb-2">
+                  <svg class="w-5 h-5 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                </div>
+                <div class="font-semibold text-gray-900 text-sm">Livraison à domicile</div>
+                <div class="text-xs text-gray-400 mt-0.5">5 TND</div>
+              </button>
+              <button (click)="deliveryForm.deliveryMethod = 'retrait'; onDeliveryMethodChange()"
+                [ngClass]="deliveryForm.deliveryMethod === 'retrait' ? 'border-green-500 bg-green-50 ring-2 ring-green-200' : 'border-gray-200 hover:border-green-300'"
+                class="border-2 rounded-xl p-4 text-left transition-all">
+                <div class="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center mb-2">
+                  <svg class="w-5 h-5 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                </div>
+                <div class="font-semibold text-gray-900 text-sm">Retrait à la ferme</div>
+                <div class="text-xs text-green-600 mt-0.5 font-medium">Gratuit</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Form -->
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
+            <h3 class="font-bold text-gray-900 text-sm uppercase tracking-wide">Coordonnées</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Nom complet *</label>
+                <input [(ngModel)]="deliveryForm.fullName" type="text" required placeholder="Ahmed Ben Salah"
+                  class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-green-500 focus:border-green-500 focus:bg-white transition text-sm">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Téléphone *</label>
+                <input [(ngModel)]="deliveryForm.phone" type="tel" required placeholder="+216 XX XXX XXX"
+                  class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-green-500 focus:border-green-500 focus:bg-white transition text-sm">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Adresse *</label>
+              <input [(ngModel)]="deliveryForm.address" type="text" required
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-green-500 focus:border-green-500 focus:bg-white transition text-sm">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Ville *</label>
+                <input [(ngModel)]="deliveryForm.city" type="text" required
+                  class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-green-500 focus:border-green-500 focus:bg-white transition text-sm">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Code postal</label>
+                <input [(ngModel)]="deliveryForm.postalCode" type="text"
+                  class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-green-500 focus:border-green-500 focus:bg-white transition text-sm">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Notes (optionnel)</label>
+              <textarea [(ngModel)]="deliveryForm.notes" rows="2"
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-green-500 focus:border-green-500 focus:bg-white transition text-sm resize-none"></textarea>
+            </div>
+
+            <!-- Map -->
+            <div *ngIf="deliveryForm.deliveryMethod === 'livraison'">
+              <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                Position exacte *
+              </label>
+              <p class="text-xs text-gray-400 mb-2">Cliquez sur la carte pour épingler votre adresse.</p>
+              <div id="delivery-map" style="height:300px;border-radius:12px;border:1.5px solid #d1fae5;"></div>
+              <div *ngIf="deliveryForm.latitude" class="mt-2 flex items-center gap-2 text-xs text-green-700 bg-green-50 px-3 py-2 rounded-lg border border-green-200">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Position sélectionnée — {{ deliveryForm.latitude | number:'1.4-4' }}°N, {{ deliveryForm.longitude | number:'1.4-4' }}°E
+              </div>
+              <div *ngIf="!deliveryForm.latitude" class="mt-2 flex items-center gap-2 text-xs text-amber-700 bg-amber-50 px-3 py-2 rounded-lg border border-amber-200">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Aucune position — cliquez sur la carte
+              </div>
+            </div>
+          </div>
+
+          <div class="flex gap-3">
+            <button (click)="backToCart()"
+              class="flex-1 py-3 border border-gray-200 text-gray-600 rounded-xl font-semibold text-sm hover:border-gray-400 transition flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+              Retour
+            </button>
+            <button (click)="proceedToPayment()"
+              class="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-sm transition flex items-center justify-center gap-2">
+              Continuer vers le paiement
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Summary Sidebar -->
+        <div>
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sticky top-24">
+            <h2 class="font-bold text-gray-900 mb-4">Résumé</h2>
+            <div class="space-y-2 pb-4 border-b border-gray-100 mb-4">
+              <div class="flex justify-between text-sm text-gray-500"><span>Sous-total</span><span class="font-semibold text-gray-800">{{ getSubtotal() | number:'1.2-2' }} TND</span></div>
+              <div class="flex justify-between text-sm text-gray-500"><span>Livraison</span><span class="font-semibold text-gray-800">{{ getDeliveryFee() | number:'1.2-2' }} TND</span></div>
+            </div>
+            <div class="flex justify-between font-extrabold text-gray-900">
+              <span>Total</span><span class="text-green-700">{{ getTotal() | number:'1.2-2' }} TND</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ STEP 3: PAYMENT ═══════════════════════════════════ -->
+    <div *ngIf="currentStep === 'payment'">
+      <h1 class="text-2xl font-extrabold text-gray-900 mb-6">Paiement</h1>
+
+      <div class="grid lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 space-y-5">
+          <!-- Payment Methods -->
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <h3 class="font-bold text-gray-900 text-sm uppercase tracking-wide mb-4">Méthode de paiement</h3>
+            <div class="space-y-3">
+              <button (click)="paymentForm.method = 'cash'"
+                [ngClass]="paymentForm.method === 'cash' ? 'border-green-500 bg-green-50 ring-2 ring-green-200' : 'border-gray-200 hover:border-green-300'"
+                class="w-full border-2 rounded-xl p-4 text-left transition-all flex items-center gap-4">
+                <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                </div>
+                <div>
+                  <div class="font-semibold text-gray-900 text-sm">Paiement à la livraison</div>
+                  <p class="text-xs text-gray-400">Payez en espèces à la réception</p>
+                </div>
+              </button>
+
+              <button (click)="paymentForm.method = 'card'"
+                [ngClass]="paymentForm.method === 'card' ? 'border-green-500 bg-green-50 ring-2 ring-green-200' : 'border-gray-200 hover:border-green-300'"
+                class="w-full border-2 rounded-xl p-4 text-left transition-all flex items-center gap-4">
+                <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                </div>
+                <div>
+                  <div class="font-semibold text-gray-900 text-sm">Carte bancaire</div>
+                  <p class="text-xs text-gray-400">Visa, Mastercard, e-DINAR</p>
+                </div>
+              </button>
+
+              <button (click)="paymentForm.method = 'mobile'"
+                [ngClass]="paymentForm.method === 'mobile' ? 'border-green-500 bg-green-50 ring-2 ring-green-200' : 'border-gray-200 hover:border-green-300'"
+                class="w-full border-2 rounded-xl p-4 text-left transition-all flex items-center gap-4">
+                <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                </div>
+                <div>
+                  <div class="font-semibold text-gray-900 text-sm">Mobile Money</div>
+                  <p class="text-xs text-gray-400">D17, Sobflous</p>
+                </div>
+              </button>
+            </div>
+
+            <!-- Card Form -->
+            <div *ngIf="paymentForm.method === 'card'" class="space-y-4 mt-5 pt-5 border-t border-gray-100">
+              <div>
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Numéro de carte *</label>
+                <input [(ngModel)]="paymentForm.cardNumber" type="text" placeholder="1234 5678 9012 3456"
+                  class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-green-500 focus:bg-white transition text-sm font-mono">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Nom sur la carte *</label>
+                <input [(ngModel)]="paymentForm.cardName" type="text" placeholder="AHMED BEN SALAH"
+                  class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-green-500 focus:bg-white transition text-sm uppercase">
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Expiration *</label>
+                  <input [(ngModel)]="paymentForm.cardExpiry" type="text" placeholder="MM/YY"
+                    class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-green-500 focus:bg-white transition text-sm">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">CVV *</label>
+                  <input [(ngModel)]="paymentForm.cardCvv" type="password" placeholder="•••"
+                    class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-green-500 focus:bg-white transition text-sm">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex gap-3">
+            <button (click)="backToDelivery()"
+              class="flex-1 py-3 border border-gray-200 text-gray-600 rounded-xl font-semibold text-sm hover:border-gray-400 transition flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+              Retour
+            </button>
+            <button (click)="placeOrder()"
+              class="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-sm transition flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              Confirmer la commande
+            </button>
+          </div>
+        </div>
+
+        <!-- Final Summary -->
+        <div>
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sticky top-24">
+            <h2 class="font-bold text-gray-900 mb-4">Récapitulatif</h2>
+            <div class="space-y-2 mb-4">
+              <div *ngFor="let item of cartItems" class="flex justify-between text-xs text-gray-500">
+                <span class="truncate mr-2">{{ item.product.name }} ×{{ item.quantity }}</span>
+                <span class="font-medium text-gray-700 flex-shrink-0">{{ (item.product.price * item.quantity) | number:'1.2-2' }} TND</span>
+              </div>
+            </div>
+            <div class="space-y-2 pt-3 border-t border-gray-100 mb-4">
+              <div class="flex justify-between text-sm text-gray-500"><span>Sous-total</span><span class="font-semibold text-gray-800">{{ getSubtotal() | number:'1.2-2' }} TND</span></div>
+              <div class="flex justify-between text-sm text-gray-500"><span>Livraison</span><span class="font-semibold text-gray-800">{{ getDeliveryFee() | number:'1.2-2' }} TND</span></div>
+            </div>
+            <div class="flex justify-between font-extrabold text-gray-900 text-lg pt-3 border-t border-gray-100">
+              <span>Total</span><span class="text-green-700">{{ getTotal() | number:'1.2-2' }} TND</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
 
     <!-- STEP 1: CART -->
     <div *ngIf="currentStep === 'cart'">
