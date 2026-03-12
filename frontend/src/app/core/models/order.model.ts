@@ -4,9 +4,14 @@ export interface DeliveryAddress {
   fullName: string;
   phone: string;
   address: string;
+  street?: string;
   city: string;
   postalCode?: string;
+  zipCode?: string;
+  country?: string;
   notes?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface Order {
@@ -32,6 +37,15 @@ export interface Order {
   driverCurrentLat?: number;
   driverCurrentLng?: number;
   lastDriverLocationUpdate?: string;
+  // Customer receipt & rating
+  rating?: number;
+  reviewText?: string;
+  // Transporter departure info
+  departureDate?: string;
+  departureLocation?: string;
+  departureLat?: number;
+  departureLng?: number;
+  transporterName?: string;
   createdAt: Date | string;
   updatedAt?: Date;
 }

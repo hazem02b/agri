@@ -4,6 +4,7 @@ import com.agricultural.marketplace.model.PaymentMethod;
 import com.agricultural.marketplace.model.User;
 import com.agricultural.marketplace.repository.PaymentMethodRepository;
 import com.agricultural.marketplace.repository.UserRepository;
+import com.agricultural.marketplace.service.KonnectPaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -27,11 +28,9 @@ public class PaymentController {
     
     @Autowired
     private UserRepository userRepository;
-    
-    @Value("${stripe.api.key:sk_test_placeholder}")
-    private String stripeApiKey;
-    
-    // Get user's payment methods
+
+    @Autowired
+    private KonnectPaymentService konnectPaymentService;
     @GetMapping("/methods")
     public ResponseEntity<?> getPaymentMethods(Authentication authentication) {
         try {
@@ -204,5 +203,41 @@ public class PaymentController {
         config.put("publishableKey", "pk_test_placeholder");
         config.put("message", "Configure your Stripe keys in application.properties");
         return ResponseEntity.ok(config);
+    }
+
+    // ---------------------------------------------------------------
+    // Konnect Payment Gateway (Tunisia)
+    // ---------------------------------------------------------------
+
+    /**
+     * Initiate a Konnect payment for an order.
+     * POST /api/payments/konnect/initiate/{orderId}
+     * Returns { payUrl, paymentRef } — frontend must redirect to payUrl.
+     */
+    @PostMapping("/konnect/initiate/{orderId}")
+    public ResponseEntity<?> initiateKonnectPayment(@PathVariable String orderId) {
+        try {
+            Map<String, String> result = konnectPaymentService.initiatePayment(orderId);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Verify a Konnect payment after the user is redirected back.
+     * GET /api/payments/konnect/verify?ref=PAYMENT_REF&orderId=ORDER_ID
+     * Returns { success: true/false }
+     */
+    @GetMapping("/konnect/verify")
+    public ResponseEntity<?> verifyKonnectPayment(
+            @RequestParam String ref,
+            @RequestParam String orderId) {
+        try {
+            boolean success = konnectPaymentService.verifyAndCompletePayment(ref, orderId);
+            return ResponseEntity.ok(Map.of("success", success));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of("success", false, "error", e.getMessage()));
+        }
     }
 }

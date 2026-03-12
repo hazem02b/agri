@@ -102,8 +102,9 @@
     <!-- User Profile at Bottom -->
     <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-green-500">
       <div class="flex items-center gap-3 px-4 py-3 hover:bg-green-700 rounded-lg cursor-pointer">
-        <div class="w-10 h-10 bg-green-700 rounded-full flex items-center justify-center font-bold">
-          {{ (currentUser?.firstName?.charAt(0) || 'A') + (currentUser?.lastName?.charAt(0) || 'B') }}
+        <div class="w-10 h-10 bg-green-700 rounded-full overflow-hidden flex items-center justify-center font-bold">
+          <img *ngIf="currentUser?.profileImage" [src]="currentUser?.profileImage" class="w-full h-full object-cover">
+          <span *ngIf="!currentUser?.profileImage">{{ (currentUser?.firstName?.charAt(0) || 'A') + (currentUser?.lastName?.charAt(0) || 'B') }}</span>
         </div>
         <div class="flex-1">
           <div class="font-medium text-sm">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</div>
@@ -444,10 +445,8 @@
         <div class="bg-white rounded-lg border border-gray-200">
           <div class="border-b border-gray-200 px-4 py-3">
             <div class="flex gap-2">
-              <button class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium">Toutes</button>
-              <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Nouvelles</button>
-              <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">En préparation</button>
-              <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Prêtes</button>
+              <button class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium">Toutes ({{ allOrders.length }})</button>
+              <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">En attente ({{ getPendingOrdersCount() }})</button>
             </div>
           </div>
           <div class="overflow-x-auto">
@@ -464,45 +463,239 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-200">
-                <tr *ngFor="let order of recentOrders" class="hover:bg-gray-50">
+                <tr *ngFor="let order of allOrders" class="hover:bg-gray-50">
                   <td class="px-6 py-4 text-sm font-medium text-gray-900">#{{ order.id?.substring(18, 24) || 'N/A' }}</td>
                   <td class="px-6 py-4">
-                    <div class="font-medium text-gray-900">{{ order.buyerName || 'Client' }}</div>
-                    <div class="text-sm text-gray-500">{{ order.deliveryAddress?.address || 'Adresse non disponible' }}</div>
+                    <div class="font-medium text-gray-900">{{ parseDeliveryNotes(order.deliveryNotes).name || order.buyerName || 'Client' }}</div>
+                    <div class="text-sm text-gray-500">{{ (order.deliveryAddress?.street || order.deliveryAddress?.address || '') }}, {{ order.deliveryAddress?.city || '' }}</div>
                   </td>
                   <td class="px-6 py-4 text-sm text-gray-700">{{ order.items?.length || 1 }} produit(s)</td>
                   <td class="px-6 py-4 text-sm font-semibold text-gray-900">{{ order.totalAmount | number:'1.2-2' }} TND</td>
-                  <td class="px-6 py-4"><span class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">Livraison</span></td>
+                  <td class="px-6 py-4">
+                    <span *ngIf="order.deliveryAddress?.latitude" class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">📍 GPS</span>
+                    <span *ngIf="!order.deliveryAddress?.latitude" class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">Livraison</span>
+                  </td>
                   <td class="px-6 py-4">
                     <span *ngIf="order.status === 'PENDING'" class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">En attente</span>
                     <span *ngIf="order.status === 'CONFIRMED'" class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">Confirmée</span>
-                    <span *ngIf="order.status === 'PROCESSING'" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">En préparation</span>
+                    <span *ngIf="order.status === 'PREPARING'" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">En préparation</span>
+                    <span *ngIf="order.status === 'READY'" class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">Prête</span>
+                    <span *ngIf="order.status === 'PROCESSING'" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">En traitement</span>
                     <span *ngIf="order.status === 'SHIPPED'" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium">Expédiée</span>
                     <span *ngIf="order.status === 'DELIVERED'" class="px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-xs font-medium">Livrée</span>
                     <span *ngIf="order.status === 'CANCELLED'" class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">Annulée</span>
                   </td>
                   <td class="px-6 py-4">
                     <div class="flex items-center gap-2">
-                      <button class="text-sm text-blue-600 hover:text-blue-700 font-medium">Voir détails</button>
+                      <button (click)="viewOrderDetails(order)" class="px-3 py-1 bg-green-600 text-white rounded text-xs font-medium hover:bg-green-700">Voir détails</button>
                       <ng-container *ngIf="isDelivering(order)">
                         <button *ngIf="sharingOrderId !== order.id"
                           (click)="startLocationShare(order.id!)"
-                          class="inline-flex items-center gap-1 px-2.5 py-1 bg-green-600 text-white rounded text-xs font-medium hover:bg-green-700 transition-colors"
-                          title="Partager votre position GPS avec le client">
-                          📍 Partager position
+                          class="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 transition-colors">
+                          📍 Partager
                         </button>
                         <button *ngIf="sharingOrderId === order.id"
                           (click)="stopLocationShare()"
-                          class="inline-flex items-center gap-1 px-2.5 py-1 bg-red-500 text-white rounded text-xs font-medium hover:bg-red-600 transition-colors animate-pulse"
-                          title="Arrêter le partage de position">
-                          ⏹ Arrêter partage
+                          class="inline-flex items-center gap-1 px-2.5 py-1 bg-red-500 text-white rounded text-xs font-medium hover:bg-red-600 transition-colors animate-pulse">
+                          ⏹ Arrêter
                         </button>
                       </ng-container>
                     </div>
                   </td>
                 </tr>
+                <tr *ngIf="allOrders.length === 0">
+                  <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                    <div class="text-4xl mb-2">📦</div>
+                    <div>Aucune commande reçue</div>
+                  </td>
+                </tr>
               </tbody>
             </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDER DETAILS MODAL -->
+    <div *ngIf="selectedOrder" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4" (click)="closeOrderDetails()">
+      <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl" (click)="$event.stopPropagation()">
+        <!-- Header -->
+        <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center rounded-t-2xl">
+          <div>
+            <h2 class="text-xl font-bold text-gray-900">Commande #{{ selectedOrder.id?.substring(18, 24) }}</h2>
+            <p class="text-sm text-gray-500">{{ formatOrderDate(selectedOrder.createdAt) }} à {{ formatOrderTime(selectedOrder.createdAt) }}</p>
+          </div>
+          <button (click)="closeOrderDetails()" class="text-2xl text-gray-400 hover:text-gray-700 leading-none">×</button>
+        </div>
+
+        <div class="p-6 space-y-6">
+          <!-- Client info -->
+          <div class="bg-gray-50 rounded-xl p-4 space-y-2">
+            <h3 class="font-bold text-gray-900 mb-3">👤 Informations client</h3>
+            <p><span class="font-semibold text-gray-600">Nom :</span> {{ parseDeliveryNotes(selectedOrder.deliveryNotes).name || selectedOrder.buyerName || 'N/A' }}</p>
+            <p><span class="font-semibold text-gray-600">Téléphone :</span> {{ parseDeliveryNotes(selectedOrder.deliveryNotes).phone || 'N/A' }}</p>
+            <p><span class="font-semibold text-gray-600">Email :</span> {{ selectedOrder.buyerEmail || 'N/A' }}</p>
+          </div>
+
+          <!-- Articles -->
+          <div>
+            <h3 class="font-bold text-gray-900 mb-3">🛒 Articles commandés</h3>
+            <div class="border border-gray-200 rounded-xl overflow-hidden">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="text-left px-4 py-3 font-semibold text-gray-700">Produit</th>
+                    <th class="text-center px-4 py-3 font-semibold text-gray-700">Qté</th>
+                    <th class="text-center px-4 py-3 font-semibold text-gray-700">Prix unit.</th>
+                    <th class="text-right px-4 py-3 font-semibold text-gray-700">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of selectedOrder.items" class="border-t border-gray-200">
+                    <td class="px-4 py-3">{{ item.productName }}</td>
+                    <td class="px-4 py-3 text-center font-semibold">{{ item.quantity }} {{ item.unit }}</td>
+                    <td class="px-4 py-3 text-center">{{ item.price | number:'1.2-2' }} TND</td>
+                    <td class="px-4 py-3 text-right font-semibold text-green-700">{{ (item.quantity * item.price) | number:'1.2-2' }} TND</td>
+                  </tr>
+                </tbody>
+                <tfoot class="bg-gray-50 border-t-2 border-gray-300">
+                  <tr>
+                    <td colspan="3" class="px-4 py-3 text-right font-bold">Total :</td>
+                    <td class="px-4 py-3 text-right font-bold text-green-600 text-lg">{{ selectedOrder.totalAmount | number:'1.2-2' }} TND</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+
+          <!-- Adresse -->
+          <div class="bg-gray-50 rounded-xl p-4 space-y-2">
+            <h3 class="font-bold text-gray-900 mb-3">📍 Adresse de livraison</h3>
+            <p><span class="font-semibold text-gray-600">Rue :</span> {{ selectedOrder.deliveryAddress?.street || selectedOrder.deliveryAddress?.address || 'N/A' }}</p>
+            <p><span class="font-semibold text-gray-600">Ville :</span> {{ selectedOrder.deliveryAddress?.city || 'N/A' }}</p>
+            <p *ngIf="selectedOrder.deliveryAddress?.zipCode"><span class="font-semibold text-gray-600">Code postal :</span> {{ selectedOrder.deliveryAddress?.zipCode }}</p>
+            <p *ngIf="parseDeliveryNotes(selectedOrder.deliveryNotes).extra" class="text-sm text-gray-600 bg-yellow-50 p-2 rounded border-l-4 border-yellow-400 mt-2">
+              <span class="font-semibold">Notes :</span> {{ parseDeliveryNotes(selectedOrder.deliveryNotes).extra }}
+            </p>
+          </div>
+
+          <!-- Carte GPS -->
+          <div *ngIf="selectedOrder.deliveryAddress?.latitude">
+            <h3 class="font-bold text-gray-900 mb-3">🗺️ Position exacte du client</h3>
+            <div id="order-detail-map" style="height: 280px; border-radius: 12px; border: 2px solid #d1fae5;"></div>
+          </div>
+          <div *ngIf="!selectedOrder.deliveryAddress?.latitude" class="flex items-center gap-2 text-sm text-gray-500 bg-gray-50 px-4 py-3 rounded-xl border border-gray-200">
+            📍 Cette commande n'a pas de coordonnées GPS
+          </div>
+
+          <!-- Statut & Actions -->
+          <div class="border-t border-gray-200 pt-4">
+            <h3 class="font-bold text-gray-900 mb-3">⚡ Actions</h3>
+
+            <!-- PENDING: Accept or Refuse -->
+            <div *ngIf="selectedOrder.status === 'PENDING'" class="space-y-3">
+              <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-sm text-yellow-800">
+                📋 En attente de votre décision. Acceptez ou refusez cette commande.
+              </div>
+              <div class="flex gap-3">
+                <button (click)="acceptOrder(selectedOrder.id)"
+                  class="flex-1 px-5 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 font-bold text-sm">
+                  ✅ Accepter la commande
+                </button>
+                <button (click)="refuseOrder(selectedOrder.id)"
+                  class="px-5 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 font-bold text-sm">
+                  ❌ Refuser
+                </button>
+              </div>
+            </div>
+
+            <!-- CONFIRMED: Advance to PROCESSING -->
+            <div *ngIf="selectedOrder.status === 'CONFIRMED'" class="space-y-3">
+              <div class="bg-green-50 border border-green-200 rounded-xl p-3 text-sm text-green-800">
+                ✅ Commande acceptée. Le client a été informé. Lancez la préparation quand vous êtes prêt.
+              </div>
+              <button (click)="advanceOrderStatus(selectedOrder.id, selectedOrder.status)"
+                class="w-full px-5 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold text-sm">
+                📦 Lancer la préparation
+              </button>
+            </div>
+
+            <!-- PROCESSING: Set departure → SHIPPED -->
+            <div *ngIf="selectedOrder.status === 'PROCESSING'" class="space-y-3">
+              <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-sm text-blue-800">
+                📦 En préparation. Définissez les informations de départ pour expédier la commande.
+              </div>
+              <div class="bg-gray-50 rounded-xl p-4 space-y-3 border border-gray-200">
+                <h4 class="font-semibold text-gray-800 text-sm">🚛 Informations d'expédition</h4>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 mb-1">Date et heure de départ *</label>
+                  <input type="datetime-local" [(ngModel)]="departureForm.date"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-400 focus:outline-none">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 mb-1">Lieu de départ *</label>
+                  <input type="text" [(ngModel)]="departureForm.location" placeholder="Ex: Tunis, Sfax, Monastir..."
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-400 focus:outline-none">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 mb-1">Nom du transporteur (optionnel)</label>
+                  <input type="text" [(ngModel)]="departureForm.transporterName" placeholder="Ex: Ahmed Ben Ali"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-400 focus:outline-none">
+                </div>
+                <button (click)="submitDeparture(selectedOrder.id)"
+                  [disabled]="!departureForm.date || !departureForm.location || departureSubmitting"
+                  class="w-full px-5 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                  <span *ngIf="!departureSubmitting">🚛 Expédier et notifier le client</span>
+                  <span *ngIf="departureSubmitting">⏳ Envoi...</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- SHIPPED: GPS sharing -->
+            <div *ngIf="selectedOrder.status === 'SHIPPED'" class="space-y-3">
+              <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
+                <p class="text-sm font-bold text-indigo-800">🚛 Commande en cours de livraison</p>
+                <ng-container *ngIf="selectedOrder.departureLocation">
+                  <p class="text-xs text-indigo-600 mt-1">📍 Depuis : {{ selectedOrder.departureLocation }}</p>
+                </ng-container>
+                <ng-container *ngIf="selectedOrder.transporterName">
+                  <p class="text-xs text-indigo-600">👤 Transporteur : {{ selectedOrder.transporterName }}</p>
+                </ng-container>
+                <p class="text-xs text-indigo-600 mt-1">Partagez votre GPS pour que le client vous suive en temps réel.</p>
+              </div>
+              <button *ngIf="sharingOrderId !== selectedOrder.id"
+                (click)="startLocationShare(selectedOrder.id!)"
+                class="w-full px-5 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold text-sm flex items-center justify-center gap-2">
+                📍 Partager ma position GPS en direct
+              </button>
+              <button *ngIf="sharingOrderId === selectedOrder.id"
+                (click)="stopLocationShare()"
+                class="w-full px-5 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 font-bold text-sm animate-pulse">
+                ⏹ Arrêter le partage GPS
+              </button>
+            </div>
+
+            <!-- DELIVERED -->
+            <div *ngIf="selectedOrder.status === 'DELIVERED'" class="text-center py-4">
+              <div class="text-3xl mb-2">✅</div>
+              <p class="font-bold text-green-700">Commande livrée avec succès</p>
+              <div *ngIf="selectedOrder.rating" class="mt-2 text-yellow-500 text-lg">
+                {{ selectedOrder.rating >= 1 ? '★' : '☆' }}{{ selectedOrder.rating >= 2 ? '★' : '☆' }}{{ selectedOrder.rating >= 3 ? '★' : '☆' }}{{ selectedOrder.rating >= 4 ? '★' : '☆' }}{{ selectedOrder.rating >= 5 ? '★' : '☆' }}
+                <p class="text-sm text-gray-500 mt-1">{{ selectedOrder.reviewText }}</p>
+              </div>
+            </div>
+
+            <!-- CANCELLED -->
+            <div *ngIf="selectedOrder.status === 'CANCELLED'" class="text-center py-4">
+              <div class="text-3xl mb-2">❌</div>
+              <p class="font-bold text-red-700">Commande annulée</p>
+            </div>
+
+            <div class="mt-4">
+              <button (click)="closeOrderDetails()" class="w-full px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 text-sm font-medium">
+                Fermer
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -825,12 +1018,11 @@
           <div class="bg-white border border-gray-200 rounded-lg p-6">
             <div class="text-sm text-gray-500 mb-2">En attente</div>
             <div class="text-3xl font-bold text-gray-900 mb-1">{{ getPendingRevenue() | number:'1.0-2' }} TND</div>
-            <div class="text-sm text-gray-500">{{ getPendingOrdersCount() }} paiement(s)</div>
+            <div class="text-sm text-gray-500">{{ getPendingPaymentsCount() }} paiement(s)</div>
           </div>
           <div class="bg-white border border-gray-200 rounded-lg p-6">
             <div class="text-sm text-gray-500 mb-2">Revenus total</div>
             <div class="text-3xl font-bold text-blue-600 mb-1">{{ stats.totalRevenue | number:'1.0-2' }} TND</div>
-            <button class="w-full mt-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium">Demander un virement</button>
           </div>
         </div>
 
@@ -961,37 +1153,6 @@
                 <div>
                   <div class="font-medium text-gray-900 mb-1">Sessions actives</div>
                   <div class="text-sm text-gray-500">Gérer vos appareils connectés</div>
-                </div>
-                <span class="text-gray-400 group-hover:text-gray-600">→</span>
-              </div>
-            </button>
-          </div>
-        </div>
-
-        <!-- Payment Settings -->
-        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <h3 class="font-semibold text-gray-900 flex items-center gap-2">
-              <span class="text-xl">💳</span>
-              <span>Paiements</span>
-            </h3>
-          </div>
-          <div class="p-6 space-y-4">
-            <button class="w-full p-4 bg-gray-50 rounded-lg hover:bg-gray-100 text-left transition-colors group">
-              <div class="flex items-center justify-between">
-                <div>
-                  <div class="font-medium text-gray-900 mb-1">Coordonnées bancaires</div>
-                  <div class="text-sm text-gray-500">Compte bancaire pour recevoir les paiements</div>
-                </div>
-                <span class="text-gray-400 group-hover:text-gray-600">→</span>
-              </div>
-            </button>
-            
-            <button class="w-full p-4 bg-gray-50 rounded-lg hover:bg-gray-100 text-left transition-colors group">
-              <div class="flex items-center justify-between">
-                <div>
-                  <div class="font-medium text-gray-900 mb-1">Historique des paiements</div>
-                  <div class="text-sm text-gray-500">Voir tous les paiements reçus</div>
                 </div>
                 <span class="text-gray-400 group-hover:text-gray-600">→</span>
               </div>

@@ -144,7 +144,7 @@ import { MapPickerComponent, MapLocation } from '../../shared/components/map-pic
             <div class="flex gap-4 pt-6 border-t">
               <button type="submit" [disabled]="saving"
                       class="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 disabled:opacity-50">
-                {{saving ? 'Enregistrement...' : (isEditMode ? 'Mettre à jour' : 'Publier l\'offre')}}
+                {{saving ? 'Enregistrement...' : (isEditMode ? 'Mettre à jour' : "Publier l'offre")}}
               </button>
               <button type="button" (click)="goBack()"
                       class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50">
@@ -222,7 +222,10 @@ export class JobCreateComponent implements OnInit {
     // Parse requirements and benefits
     this.job.requirements = this.requirementsText.split('\n').filter(r => r.trim());
     this.job.benefits = this.benefitsText.split('\n').filter(b => b.trim());
-    this.job.applicationDeadline = this.deadlineDate;
+    // Convert date-only string (YYYY-MM-DD) to LocalDateTime format expected by the backend
+    this.job.applicationDeadline = this.deadlineDate && !this.deadlineDate.includes('T')
+      ? this.deadlineDate + 'T00:00:00'
+      : this.deadlineDate;
 
     this.saving = true;
 

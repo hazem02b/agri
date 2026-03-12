@@ -158,4 +158,41 @@ public class OrderService {
     public Order saveOrder(Order order) {
         return orderRepository.save(order);
     }
+
+    public Order confirmReceipt(String orderId) {
+        Order order = getOrderById(orderId);
+        order.setStatus(Order.OrderStatus.DELIVERED);
+        order.setActualDeliveryDate(LocalDateTime.now());
+        Order.OrderTracking tracking = new Order.OrderTracking();
+        tracking.setStatus(Order.OrderStatus.DELIVERED);
+        tracking.setDescription("Réception confirmée par le client");
+        tracking.setTimestamp(LocalDateTime.now());
+        order.getTrackingHistory().add(tracking);
+        return orderRepository.save(order);
+    }
+
+    public Order rateOrder(String orderId, Double rating, String reviewText) {
+        Order order = getOrderById(orderId);
+        order.setRating(rating);
+        order.setReviewText(reviewText);
+        return orderRepository.save(order);
+    }
+
+    public Order setDeparture(String orderId, String departureDate, String departureLocation,
+                              String transporterName) {
+        Order order = getOrderById(orderId);
+        order.setDepartureDate(departureDate);
+        order.setDepartureLocation(departureLocation);
+        order.setTransporterName(transporterName);
+        order.setStatus(Order.OrderStatus.SHIPPED);
+        Order.OrderTracking tracking = new Order.OrderTracking();
+        tracking.setStatus(Order.OrderStatus.SHIPPED);
+        tracking.setDescription("Colis expédié" +
+            (transporterName != null && !transporterName.isEmpty() ? " par " + transporterName : "") +
+            (departureLocation != null ? " depuis " + departureLocation : ""));
+        tracking.setTimestamp(LocalDateTime.now());
+        tracking.setLocation(departureLocation);
+        order.getTrackingHistory().add(tracking);
+        return orderRepository.save(order);
+    }
 }

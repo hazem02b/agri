@@ -17,6 +17,8 @@ export class ProfileComponent implements OnInit {
   user: User | null = null;
   editMode = false;
   loading = false;
+  selectedPhoto: string | null = null;
+  photoUploading = false;
   
   // Form data
   profileForm = {
@@ -160,5 +162,61 @@ export class ProfileComponent implements OnInit {
 
   isFarmer(): boolean {
     return this.user?.role === 'FARMER';
+  }
+
+  onPhotoSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      this.toastService.error('Image trop grande. Maximum 10 Mo.');
+      input.value = '';
+      return;
+    }
+
+    this.photoUploading = true;
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const MAX = 800;
+      let w = img.width;
+      let h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else       { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width  = w;
+      canvas.height = h;
+      canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
+      const base64 = canvas.toDataURL('image/jpeg', 0.82);
+
+      this.selectedPhoto = base64;
+      input.value = '';
+
+      this.authService.updateProfile({ profileImage: base64 }).subscribe({
+        next: () => {
+          this.photoUploading = false;
+          this.toastService.success('Photo de profil mise à jour !');
+        },
+        error: () => {
+          this.photoUploading = false;
+          this.selectedPhoto = null;
+          this.toastService.error('Erreur lors du téléchargement de la photo');
+        }
+      });
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      this.photoUploading = false;
+      this.toastService.error('Impossible de lire cette image.');
+      input.value = '';
+    };
+
+    img.src = objectUrl;
   }
 }

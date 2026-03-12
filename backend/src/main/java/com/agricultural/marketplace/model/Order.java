@@ -58,6 +58,20 @@ public class Order {
     private Double driverCurrentLng;
     private String lastDriverLocationUpdate;
 
+    // Customer receipt confirmation & rating
+    private Double rating;
+    private String reviewText;
+
+    // Transporter departure info
+    private String departureDate;
+    private String departureLocation;
+    private Double departureLat;
+    private Double departureLng;
+    private String transporterName;
+
+    // Konnect payment reference
+    private String paymentRef;
+
     @CreatedDate
     private LocalDateTime createdAt;
     

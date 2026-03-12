@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { OrderService } from '../../../core/services/order.service';
@@ -6,6 +6,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { MessageService } from '../../../core/services/message.service';
 import { Order, OrderStatus } from '../../../core/models/order.model';
+import * as L from 'leaflet';
 
 @Component({
   selector: 'app-farmer-orders',
@@ -14,12 +15,14 @@ import { Order, OrderStatus } from '../../../core/models/order.model';
   templateUrl: './farmer-orders.component.html',
   styleUrl: './farmer-orders.component.css'
 })
-export class FarmerOrdersComponent implements OnInit {
+export class FarmerOrdersComponent implements OnInit, OnDestroy {
   orders: Order[] = [];
   filteredOrders: Order[] = [];
   loading = true;
   selectedOrder: Order | null = null;
   currentFilter: OrderStatus | 'ALL' = 'ALL';
+
+  private orderMap: L.Map | null = null;
 
   orderStatuses = [
     { value: 'ALL' as const, label: 'Toutes', count: 0 },
@@ -91,10 +94,43 @@ export class FarmerOrdersComponent implements OnInit {
 
   viewOrderDetails(order: Order) {
     this.selectedOrder = order;
+    setTimeout(() => this.initOrderMap(order), 250);
   }
 
   closeDetails() {
     this.selectedOrder = null;
+    if (this.orderMap) {
+      this.orderMap.remove();
+      this.orderMap = null;
+    }
+  }
+
+  initOrderMap(order: Order): void {
+    const addr = order.deliveryAddress as any;
+    if (!addr?.latitude || !addr?.longitude) return;
+    const mapEl = document.getElementById('order-location-map');
+    if (!mapEl) return;
+    if (this.orderMap) { this.orderMap.remove(); this.orderMap = null; }
+    this.orderMap = L.map('order-location-map').setView([addr.latitude, addr.longitude], 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '\u00a9 OpenStreetMap contributors',
+      maxZoom: 19
+    }).addTo(this.orderMap);
+    const clientInfo = this.parseDeliveryNotes(order.deliveryNotes);
+    L.marker([addr.latitude, addr.longitude])
+      .addTo(this.orderMap)
+      .bindPopup(`<b>${clientInfo.name || order.buyerName || 'Client'}</b><br>${addr.street || ''}, ${addr.city || ''}`)
+      .openPopup();
+  }
+
+  parseDeliveryNotes(notes?: string): { name: string; phone: string; extra: string } {
+    if (!notes) return { name: '', phone: '', extra: '' };
+    const parts = notes.split(' | ');
+    return { name: parts[0] || '', phone: parts[1] || '', extra: parts.slice(2).join(' | ') };
+  }
+
+  ngOnDestroy(): void {
+    if (this.orderMap) { this.orderMap.remove(); this.orderMap = null; }
   }
 
   updateOrderStatus(orderId: string, newStatus: OrderStatus) {

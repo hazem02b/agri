@@ -102,6 +102,41 @@ public class OrderController {
         }
     }
     
+    @PutMapping("/{id}/confirm-receipt")
+    public ResponseEntity<?> confirmReceipt(@PathVariable String id) {
+        try {
+            Order order = orderService.confirmReceipt(id);
+            return ResponseEntity.ok(new ApiResponse(true, "Réception confirmée", order));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{id}/rate")
+    public ResponseEntity<?> rateOrder(@PathVariable String id, @RequestBody Map<String, Object> body) {
+        try {
+            Double rating = Double.valueOf(body.get("rating").toString());
+            String reviewText = body.get("reviewText") != null ? body.get("reviewText").toString() : "";
+            Order order = orderService.rateOrder(id, rating, reviewText);
+            return ResponseEntity.ok(new ApiResponse(true, "Évaluation enregistrée", order));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{id}/departure")
+    public ResponseEntity<?> setDeparture(@PathVariable String id, @RequestBody Map<String, Object> body) {
+        try {
+            String departureDate = body.get("departureDate") != null ? body.get("departureDate").toString() : null;
+            String departureLocation = body.get("departureLocation") != null ? body.get("departureLocation").toString() : null;
+            String transporterName = body.get("transporterName") != null ? body.get("transporterName").toString() : null;
+            Order order = orderService.setDeparture(id, departureDate, departureLocation, transporterName);
+            return ResponseEntity.ok(new ApiResponse(true, "Départ défini", order));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage()));
+        }
+    }
+
     // Inner class for request body
     public static class CreateOrderRequest {
         private List<Order.OrderItem> items;

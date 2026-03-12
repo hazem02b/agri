@@ -78,9 +78,11 @@
           <div class="relative" #userDropdown>
             <button (click)="toggleDropdown()"  
                     class="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/10 transition-colors group">
-              <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm shadow-lg"
-                   [ngClass]="currentUser.role === 'FARMER' ? 'bg-gradient-to-br from-primary to-green-700' : 'bg-gradient-to-br from-secondary to-orange-600'">
-                {{currentUser.firstName?.charAt(0) || 'U'}}{{currentUser.lastName?.charAt(0) || ''}}
+              <!-- Avatar: photo or initials -->
+              <div class="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center text-white text-sm shadow-lg"
+                   [ngClass]="currentUser.profileImage ? '' : (currentUser.role === 'FARMER' ? 'bg-gradient-to-br from-primary to-green-700' : 'bg-gradient-to-br from-secondary to-orange-600')">
+                <img *ngIf="currentUser.profileImage" [src]="currentUser.profileImage" class="w-full h-full object-cover">
+                <span *ngIf="!currentUser.profileImage">{{currentUser.firstName?.charAt(0) || 'U'}}{{currentUser.lastName?.charAt(0) || ''}}</span>
               </div>
               <div class="hidden md:block text-left">
                 <div class="text-sm leading-none text-white">{{currentUser.firstName || 'Utilisateur'}}</div>
@@ -95,8 +97,10 @@
               <!-- Profile Header -->
               <div class="p-4" [ngClass]="currentUser.role === 'FARMER' ? 'bg-gradient-to-br from-primary to-green-700' : 'bg-gradient-to-br from-secondary to-orange-600'">
                 <div class="flex items-center gap-3">
-                  <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white font-bold text-lg border border-white/30">
-                    {{currentUser.firstName?.charAt(0) || 'U'}}{{currentUser.lastName?.charAt(0) || ''}}
+                  <!-- Dropdown header avatar: photo or initials -->
+                  <div class="w-12 h-12 rounded-xl overflow-hidden bg-white/20 backdrop-blur-sm flex items-center justify-center text-white font-bold text-lg border border-white/30">
+                    <img *ngIf="currentUser.profileImage" [src]="currentUser.profileImage" class="w-full h-full object-cover">
+                    <span *ngIf="!currentUser.profileImage">{{currentUser.firstName?.charAt(0) || 'U'}}{{currentUser.lastName?.charAt(0) || ''}}</span>
                   </div>
                   <div>
                     <div class="text-white font-semibold">{{currentUser.firstName}} {{currentUser.lastName}}</div>

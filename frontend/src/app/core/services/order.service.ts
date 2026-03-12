@@ -39,9 +39,7 @@ export class OrderService {
   
   updateOrderStatus(id: string, status: OrderStatus, description?: string): Observable<ApiResponse<Order>> {
     let params = new HttpParams().set('status', status);
-    if (description) {
-      params = params.set('description', description);
-    }
+    params = params.set('description', description || 'Mise à jour du statut');
     return this.http.put<ApiResponse<Order>>(`${this.apiUrl}/${id}/status`, null, { params });
   }
   
@@ -51,5 +49,30 @@ export class OrderService {
 
   updateOrderDriverLocation(orderId: string, lat: number, lng: number): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/${orderId}/driver-location`, { lat, lng });
+  }
+
+  confirmReceipt(orderId: string): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/${orderId}/confirm-receipt`, {});
+  }
+
+  rateOrder(orderId: string, rating: number, reviewText: string): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/${orderId}/rate`, { rating, reviewText });
+  }
+
+  setDeparture(orderId: string, data: { departureDate: string; departureLocation: string; transporterName?: string }): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/${orderId}/departure`, data);
+  }
+
+  initiateKonnectPayment(orderId: string): Observable<{ payUrl: string; paymentRef: string }> {
+    return this.http.post<{ payUrl: string; paymentRef: string }>(
+      `${environment.apiUrl}/payments/konnect/initiate/${orderId}`, {}
+    );
+  }
+
+  verifyKonnectPayment(ref: string, orderId: string): Observable<{ success: boolean }> {
+    return this.http.get<{ success: boolean }>(
+      `${environment.apiUrl}/payments/konnect/verify`,
+      { params: { ref, orderId } }
+    );
   }
 }

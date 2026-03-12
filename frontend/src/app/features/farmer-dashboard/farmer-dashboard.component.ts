@@ -21,6 +21,7 @@ import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.com
 import { MapPickerComponent, MapLocation } from '../../shared/components/map-picker/map-picker.component';
 import { MapViewComponent } from '../../shared/components/map-view/map-view.component';
 import { Chart, registerables } from 'chart.js';
+import * as L from 'leaflet';
 
 Chart.register(...registerables);
 
@@ -57,10 +58,16 @@ export class FarmerDashboardComponent implements OnInit, AfterViewInit, OnDestro
 
   recentOrders: Order[] = [];
   allOrders: Order[] = [];
+  selectedOrder: Order | null = null;
+  private orderDetailsMap: L.Map | null = null;
 
   // GPS Location sharing for order delivery
   sharingOrderId: string | null = null;
   locationShareTimer: any = null;
+
+  // Departure form for farmer/transporter assignment
+  departureForm: { date: string; location: string; transporterName: string } = { date: '', location: '', transporterName: '' };
+  departureSubmitting = false;
   weeklySalesData: number[] = [0, 0, 0, 0, 0, 0, 0]; // Lun-Dim
   topProductsLabels: string[] = [];
   topProductsData: number[] = [];
@@ -383,7 +390,7 @@ export class FarmerDashboardComponent implements OnInit, AfterViewInit, OnDestro
       .reduce((sum, o) => sum + o.totalAmount, 0);
   }
 
-  getPendingOrdersCount(): number {
+  getPendingPaymentsCount(): number {
     return this.allOrders.filter(o => o.paymentStatus === 'PENDING' || !o.paymentStatus).length;
   }
 
@@ -497,11 +504,15 @@ export class FarmerDashboardComponent implements OnInit, AfterViewInit, OnDestro
   submitCreateOffer(): void {
     if (!this.offerForm.destination || !this.offerForm.scheduledDate) return;
     this.savingOffer = true;
+    // Convert date-only string (YYYY-MM-DD) to LocalDateTime format expected by the backend
+    const scheduledDateFormatted = this.offerForm.scheduledDate.includes('T')
+      ? this.offerForm.scheduledDate
+      : this.offerForm.scheduledDate + 'T00:00:00';
     const offerData: Partial<DeliveryRoute> = {
       destination: this.offerForm.destination,
       quantity: this.offerForm.quantity,
       quantityUnit: this.offerForm.quantityUnit,
-      scheduledDate: this.offerForm.scheduledDate,
+      scheduledDate: scheduledDateFormatted,
       transportPrice: this.offerForm.transportPrice,
       description: this.offerForm.description,
       destinationLat: this.offerForm.destinationLat || undefined,
@@ -790,5 +801,162 @@ export class FarmerDashboardComponent implements OnInit, AfterViewInit, OnDestro
 
   ngOnDestroy(): void {
     this.stopLocationShare();
+    if (this.orderDetailsMap) {
+      this.orderDetailsMap.remove();
+      this.orderDetailsMap = null;
+    }
+  }
+
+  viewOrderDetails(order: Order): void {
+    this.selectedOrder = order;
+    setTimeout(() => this.initOrderDetailsMap(order), 300);
+  }
+
+  closeOrderDetails(): void {
+    this.selectedOrder = null;
+    if (this.orderDetailsMap) {
+      this.orderDetailsMap.remove();
+      this.orderDetailsMap = null;
+    }
+  }
+
+  initOrderDetailsMap(order: Order): void {
+    const addr = order.deliveryAddress as any;
+    if (!addr?.latitude || !addr?.longitude) return;
+    const mapEl = document.getElementById('order-detail-map');
+    if (!mapEl) return;
+    if (this.orderDetailsMap) { this.orderDetailsMap.remove(); this.orderDetailsMap = null; }
+    this.orderDetailsMap = L.map('order-detail-map').setView([addr.latitude, addr.longitude], 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '\u00a9 OpenStreetMap',
+      maxZoom: 19
+    }).addTo(this.orderDetailsMap);
+    const info = this.parseDeliveryNotes(order.deliveryNotes);
+    L.marker([addr.latitude, addr.longitude])
+      .addTo(this.orderDetailsMap)
+      .bindPopup(`<b>${info.name || order.buyerName || 'Client'}</b><br>${addr.street || ''}, ${addr.city || ''}`)
+      .openPopup();
+  }
+
+  parseDeliveryNotes(notes?: string): { name: string; phone: string; extra: string } {
+    if (!notes) return { name: '', phone: '', extra: '' };
+    const parts = notes.split(' | ');
+    return { name: parts[0] || '', phone: parts[1] || '', extra: parts.slice(2).join(' | ') };
+  }
+
+  getNextStatus(status: OrderStatus): OrderStatus | null {
+    const flow: Partial<Record<OrderStatus, OrderStatus>> = {
+      [OrderStatus.CONFIRMED]: OrderStatus.PROCESSING,
+    };
+    return flow[status] ?? null;
+  }
+
+  getNextStatusLabel(status: OrderStatus): string {
+    const labels: Partial<Record<OrderStatus, string>> = {
+      [OrderStatus.CONFIRMED]: 'Lancer la préparation',
+    };
+    const next = this.getNextStatus(status);
+    return next ? (labels[status] ?? '') : '';
+  }
+
+  advanceOrderStatus(orderId: string, currentStatus: OrderStatus): void {
+    const next = this.getNextStatus(currentStatus);
+    if (!next) return;
+    this.orderService.updateOrderStatus(orderId, next).subscribe({
+      next: () => {
+        const order = this.allOrders.find(o => o.id === orderId);
+        if (order) order.status = next;
+        if (this.selectedOrder?.id === orderId) this.selectedOrder.status = next;
+        this.toastService.success('Statut mis à jour');
+      },
+      error: () => this.toastService.error('Erreur lors de la mise à jour')
+    });
+  }
+
+  acceptOrder(orderId: string): void {
+    this.orderService.updateOrderStatus(orderId, OrderStatus.CONFIRMED, 'Commande acceptée par l\'agriculteur').subscribe({
+      next: () => {
+        const order = this.allOrders.find(o => o.id === orderId);
+        if (order) order.status = OrderStatus.CONFIRMED;
+        if (this.selectedOrder?.id === orderId) this.selectedOrder.status = OrderStatus.CONFIRMED;
+        this.toastService.success('Commande acceptée ! Le client peut procéder au paiement.');
+      },
+      error: () => this.toastService.error('Erreur lors de l\'acceptation')
+    });
+  }
+
+  refuseOrder(orderId: string): void {
+    if (!confirm('Refuser cette commande ? Le client sera informé de votre décision.')) return;
+    this.orderService.updateOrderStatus(orderId, OrderStatus.CANCELLED, 'Commande refusée par l\'agriculteur').subscribe({
+      next: () => {
+        const order = this.allOrders.find(o => o.id === orderId);
+        if (order) order.status = OrderStatus.CANCELLED;
+        if (this.selectedOrder?.id === orderId) this.selectedOrder.status = OrderStatus.CANCELLED;
+        this.toastService.success('Commande refusée.');
+      },
+      error: () => this.toastService.error('Erreur lors du refus')
+    });
+  }
+
+  submitDeparture(orderId: string): void {
+    if (!this.departureForm.date || !this.departureForm.location) {
+      this.toastService.error('Veuillez renseigner la date et le lieu de départ.');
+      return;
+    }
+    this.departureSubmitting = true;
+    this.orderService.setDeparture(orderId, {
+      departureDate: this.departureForm.date,
+      departureLocation: this.departureForm.location,
+      transporterName: this.departureForm.transporterName || undefined
+    }).subscribe({
+      next: (res: any) => {
+        const updated = res.data || res;
+        const order = this.allOrders.find(o => o.id === orderId);
+        if (order) {
+          order.status = OrderStatus.SHIPPED;
+          (order as any).departureDate = this.departureForm.date;
+          (order as any).departureLocation = this.departureForm.location;
+          (order as any).transporterName = this.departureForm.transporterName;
+        }
+        if (this.selectedOrder?.id === orderId) {
+          this.selectedOrder.status = OrderStatus.SHIPPED;
+          (this.selectedOrder as any).departureDate = this.departureForm.date;
+          (this.selectedOrder as any).departureLocation = this.departureForm.location;
+          (this.selectedOrder as any).transporterName = this.departureForm.transporterName;
+        }
+        this.departureForm = { date: '', location: '', transporterName: '' };
+        this.departureSubmitting = false;
+        this.toastService.success('Commande expédiée ! Le client peut maintenant suivre sa livraison.');
+      },
+      error: () => {
+        this.departureSubmitting = false;
+        this.toastService.error('Erreur lors de l\'expédition');
+      }
+    });
+  }
+
+  cancelDashboardOrder(orderId: string): void {
+    if (!confirm('Annuler cette commande ?')) return;
+    this.orderService.updateOrderStatus(orderId, OrderStatus.CANCELLED).subscribe({
+      next: () => {
+        const order = this.allOrders.find(o => o.id === orderId);
+        if (order) order.status = OrderStatus.CANCELLED;
+        if (this.selectedOrder?.id === orderId) this.selectedOrder.status = OrderStatus.CANCELLED;
+        this.toastService.success('Commande annulée');
+      },
+      error: () => this.toastService.error('Erreur lors de l\'annulation')
+    });
+  }
+
+  formatOrderDate(date: string | Date): string {
+    return new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+  }
+
+  formatOrderTime(date: string | Date): string {
+    return new Date(date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  getPendingOrdersCount(): number {
+    return this.allOrders.filter(o => o.status === OrderStatus.PENDING).length;
   }
 }

@@ -40,7 +40,7 @@ export class MarketplaceComponent implements OnInit {
   sortBy = 'distance';
   
   // Filters
-  maxDistance = 50;
+  maxDistance = 500;
   minPrice = 0;
   maxPrice = 1000;
   filters = {
@@ -113,7 +113,7 @@ export class MarketplaceComponent implements OnInit {
         console.error('Error calculating distances:', error);
         // En cas d'erreur, assigner des distances par défaut
         this.products.forEach(product => {
-          product.calculatedDistance = 50; // Distance par défaut
+          product.calculatedDistance = 500; // Distance par défaut (toute la Tunisie)
         });
         this.loadingDistances = false;
         this.applyFilters();
@@ -229,7 +229,7 @@ export class MarketplaceComponent implements OnInit {
       harvestedToday: false,
       permaculture: false
     };
-    this.maxDistance = 50;
+    this.maxDistance = 500;
     this.minPrice = 0;
     this.maxPrice = 1000;
     this.selectedCategory = 'all';
