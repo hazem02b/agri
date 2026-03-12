@@ -121,3 +121,4 @@ public class UserController {
                     .body(new ApiResponse(false, "Erreur: " + e.getMessage()));
         }
     }
+}
