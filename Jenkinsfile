@@ -1,27 +1,30 @@
 pipeline {
     agent {
         kubernetes {
-            label 'my-agent'
-            defaultContainer 'jnlp'
+            // Définition du pod directement dans le Jenkinsfile
             yaml '''
 apiVersion: v1
 kind: Pod
 spec:
+  serviceAccountName: jenkins-sa
   containers:
+  - name: jnlp
+    image: jenkins/inbound-agent:latest
+    args: ['$(JENKINS_SECRET)', '$(JENKINS_NAME)']
+    env:
+    - name: JENKINS_URL
+      value: http://jenkins-agent.jenkins.svc.cluster.local:50000
   - name: maven
     image: maven:3.9-eclipse-temurin-17
-    command:
-    - cat
+    command: ['cat']
     tty: true
   - name: node
     image: node:18-alpine
-    command:
-    - cat
+    command: ['cat']
     tty: true
   - name: docker
     image: docker:20.10.24
-    command:
-    - cat
+    command: ['cat']
     tty: true
     volumeMounts:
     - name: docker-sock
@@ -35,13 +38,14 @@ spec:
     }
 
     environment {
-        DOCKER_HUB_USERNAME = 'hazembellili' 
+        DOCKER_HUB_USERNAME = 'hazembellili'
         APP_VERSION = "v${env.BUILD_ID}"
     }
 
     stages {
         stage('Checkout') {
             steps {
+                // Le checkout se fait dans le conteneur jnlp par défaut
                 checkout scm
             }
         }
@@ -65,29 +69,29 @@ spec:
             }
         }
 
-        stage('Build & Push Backend Image') {
+        stage('Build & Load Backend Image') {
             steps {
                 container('docker') {
                     script {
                         def imageName = "${DOCKER_HUB_USERNAME}/agri-backend:${APP_VERSION}"
                         sh "docker build -t ${imageName} -f backend/Dockerfile backend"
-                        // Pour un vrai pipeline, vous ajouteriez ici la connexion à Docker Hub et le push
-                        // sh 'docker login -u ... -p ...'
-                        // sh "docker push ${imageName}"
-                        echo "Image backend construite (push désactivé pour le test local) : ${imageName}"
+                        echo "Image backend construite: ${imageName}"
+                        sh "minikube -p minikube image load ${imageName}"
+                        echo "Image backend chargée dans Minikube."
                     }
                 }
             }
         }
 
-        stage('Build & Push Frontend Image') {
+        stage('Build & Load Frontend Image') {
             steps {
                 container('docker') {
                     script {
                         def imageName = "${DOCKER_HUB_USERNAME}/agri-frontend:${APP_VERSION}"
                         sh "docker build -t ${imageName} -f frontend/Dockerfile frontend"
-                        // sh "docker push ${imageName}"
-                        echo "Image frontend construite (push désactivé pour le test local) : ${imageName}"
+                        echo "Image frontend construite: ${imageName}"
+                        sh "minikube -p minikube image load ${imageName}"
+                        echo "Image frontend chargée dans Minikube."
                     }
                 }
             }
@@ -95,21 +99,29 @@ spec:
 
         stage('Deploy to Minikube') {
             steps {
-                container('docker') { // Utiliser un conteneur qui a kubectl/minikube ou l'installer
+                // Ce conteneur a besoin de kubectl. Pour la simplicité, on suppose que l'image docker
+                // pourrait être étendue pour l'inclure, ou on utiliserait une image dédiée.
+                // Ici, on va essayer de l'exécuter dans le conteneur docker qui a au moins 'sh'.
+                container('docker') {
                     echo "Déploiement sur Minikube..."
-                    // Cette étape est complexe car l'agent pod doit avoir accès à kubectl et au contexte minikube
-                    // Pour une démo, nous allons simuler cette étape.
-                    // Dans un vrai scénario, on utiliserait un conteneur avec kubectl configuré
-                    // ou le plugin Kubernetes pour déployer.
-                    echo "Mise à jour des fichiers de déploiement..."
+                    // Mettre à jour les fichiers de déploiement avec les nouvelles images
                     sh "sed -i 's|image: .*agri-backend.*|image: ${DOCKER_HUB_USERNAME}/agri-backend:${APP_VERSION}|g' k8s/backend.yml"
                     sh "sed -i 's|image: .*agri-frontend.*|image: ${DOCKER_HUB_USERNAME}/agri-frontend:${APP_VERSION}|g' k8s/frontend.yml"
-                    echo "NOTE: L'application directe avec kubectl depuis le pod est désactivée pour ce test."
-                    // sh 'kubectl apply -f k8s/backend.yml'
-                    // sh 'kubectl apply -f k8s/frontend.yml'
-                    echo "Déploiement terminé (simulation)."
+                    
+                    echo "NOTE: L'application directe avec kubectl depuis le pod est une pratique avancée."
+                    echo "Pour ce pipeline, nous nous concentrons sur la construction et le chargement des images."
+                    echo "Le déploiement final peut être fait manuellement ou avec un plugin comme 'Kubernetes CLI'."
+                    
+                    echo "Déploiement (simulation) terminé."
                 }
             }
+        }
+    }
+    post {
+        always {
+            echo "Pipeline terminé."
+            // Nettoyage de l'espace de travail
+            cleanWs()
         }
     }
 }
