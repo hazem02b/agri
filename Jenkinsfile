@@ -8,12 +8,9 @@ kind: Pod
 spec:
   serviceAccountName: jenkins-sa
   containers:
-  - name: jnlp
-    image: jenkins/inbound-agent:latest
-    args: ['$(JENKINS_SECRET)', '$(JENKINS_NAME)']
-    env:
-    - name: JENKINS_URL
-      value: http://jenkins-agent.jenkins.svc.cluster.local:50000
+    - name: jnlp
+      image: jenkins/inbound-agent:latest
+      args: ['-url', 'http://jenkins-agent.jenkins.svc.cluster.local:50000', '$(JENKINS_SECRET)', '$(JENKINS_NAME)']
   - name: maven
     image: maven:3.9-eclipse-temurin-17
     command: ['cat']
