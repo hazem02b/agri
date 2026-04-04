@@ -103,12 +103,11 @@ spec:
             }
         }
     }
-    post {
-        always {
-            node {
-                echo "Pipeline terminé."
-                cleanWs()
-            }
-        }
+  post {
+    always {
+        echo "Pipeline terminé."
+        // Nettoyage de l'espace de travail
+        cleanWs()
     }
+ }
 }
