@@ -1,7 +1,6 @@
 pipeline {
     agent {
         kubernetes {
-            // Définition du pod directement dans le Jenkinsfile
             yaml '''
 apiVersion: v1
 kind: Pod
@@ -9,8 +8,13 @@ spec:
   serviceAccountName: jenkins-sa
   containers:
     - name: jnlp
+<<<<<<< HEAD
         image: 'jenkins/inbound-agent:latest'
         workingDir: '/home/jenkins/agent'
+=======
+      image: jenkins/inbound-agent:latest
+      args: ['-url', 'http://jenkins-agent.jenkins.svc.cluster.local:50000', '$(JENKINS_SECRET)', '$(JENKINS_NAME)']
+>>>>>>> d2fe4a57aa728122b59a6d975101d03a174f4b0b
     - name: maven
       image: maven:3.9-eclipse-temurin-17
       command: ['cat']
@@ -42,7 +46,6 @@ spec:
     stages {
         stage('Checkout') {
             steps {
-                // Le checkout se fait dans le conteneur jnlp par défaut
                 checkout scm
             }
         }
@@ -96,29 +99,24 @@ spec:
 
         stage('Deploy to Minikube') {
             steps {
-                // Ce conteneur a besoin de kubectl. Pour la simplicité, on suppose que l'image docker
-                // pourrait être étendue pour l'inclure, ou on utiliserait une image dédiée.
-                // Ici, on va essayer de l'exécuter dans le conteneur docker qui a au moins 'sh'.
                 container('docker') {
                     echo "Déploiement sur Minikube..."
-                    // Mettre à jour les fichiers de déploiement avec les nouvelles images
                     sh "sed -i 's|image: .*agri-backend.*|image: ${DOCKER_HUB_USERNAME}/agri-backend:${APP_VERSION}|g' k8s/backend.yml"
                     sh "sed -i 's|image: .*agri-frontend.*|image: ${DOCKER_HUB_USERNAME}/agri-frontend:${APP_VERSION}|g' k8s/frontend.yml"
-                    
-                    echo "NOTE: L'application directe avec kubectl depuis le pod est une pratique avancée."
-                    echo "Pour ce pipeline, nous nous concentrons sur la construction et le chargement des images."
-                    echo "Le déploiement final peut être fait manuellement ou avec un plugin comme 'Kubernetes CLI'."
-                    
                     echo "Déploiement (simulation) terminé."
                 }
             }
         }
     }
-    post {
-        always {
-            echo "Pipeline terminé."
-            // Nettoyage de l'espace de travail
-            cleanWs()
-        }
+  post {
+    always {
+        echo "Pipeline terminé."
+        // Nettoyage de l'espace de travail
+        cleanWs()
     }
+<<<<<<< HEAD
 }
+=======
+ }
+}
+>>>>>>> d2fe4a57aa728122b59a6d975101d03a174f4b0b
