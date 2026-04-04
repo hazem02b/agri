@@ -14,15 +14,15 @@ spec:
         workingDir: '/home/jenkins/agent'
       - name: maven
         image: 'maven:3.9-eclipse-temurin-17'
-        command: ['cat']
+        command: ['sh', '-c', 'while true; do sleep 3600; done']
         ttyEnabled: true
       - name: node
         image: 'node:18-alpine'
-        command: ['cat']
+        command: ['sh', '-c', 'while true; do sleep 3600; done']
         ttyEnabled: true
       - name: docker
         image: 'docker:20.10.24'
-        command: ['cat']
+        command: ['sh', '-c', 'while true; do sleep 3600; done']
         ttyEnabled: true
         volumeMounts:
           - name: docker-sock
