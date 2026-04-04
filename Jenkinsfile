@@ -9,27 +9,27 @@ spec:
   serviceAccountName: jenkins-sa
   containers:
     - name: jnlp
-      image: jenkins/inbound-agent:latest
-      args: ['-url', 'http://jenkins-agent.jenkins.svc.cluster.local:50000', '$(JENKINS_SECRET)', '$(JENKINS_NAME)']
-  - name: maven
-    image: maven:3.9-eclipse-temurin-17
-    command: ['cat']
-    tty: true
-  - name: node
-    image: node:18-alpine
-    command: ['cat']
-    tty: true
-  - name: docker
-    image: docker:20.10.24
-    command: ['cat']
-    tty: true
-    volumeMounts:
-    - name: docker-sock
-      mountPath: /var/run/docker.sock
+        image: 'jenkins/inbound-agent:latest'
+        workingDir: '/home/jenkins/agent'
+    - name: maven
+      image: maven:3.9-eclipse-temurin-17
+      command: ['cat']
+      tty: true
+    - name: node
+      image: node:18-alpine
+      command: ['cat']
+      tty: true
+    - name: docker
+      image: docker:20.10.24
+      command: ['cat']
+      tty: true
+      volumeMounts:
+        - name: docker-sock
+          mountPath: /var/run/docker.sock
   volumes:
-  - name: docker-sock
-    hostPath:
-      path: /var/run/docker.sock
+    - name: docker-sock
+      hostPath:
+        path: /var/run/docker.sock
 '''
         }
     }
