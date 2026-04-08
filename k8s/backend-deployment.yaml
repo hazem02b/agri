@@ -21,8 +21,9 @@ spec:
         vault.hashicorp.com/agent-inject-secret-application.properties: "secret/data/agri/db"
         vault.hashicorp.com/agent-inject-template-application.properties: |
           {{- with secret "secret/data/agri/db" -}}
-          spring.data.mongodb.uri=mongodb://{{ .Data.data.username }}:{{ .Data.data.password }}@agri-mongodb:27017/agricultural_marketplace
+          spring.data.mongodb.uri=mongodb://{{ .Data.data.username }}:{{ .Data.data.password }}@agri-mongodb:27017/agricultural_marketplace?authSource=admin
           server.port=8080
+
           {{- end }}
     spec:
       serviceAccountName: agri-backend-sa
