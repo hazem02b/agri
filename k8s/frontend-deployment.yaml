@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agri-frontend
+  labels:
+    app: agri-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agri-frontend
+  template:
+    metadata:
+      labels:
+        app: agri-frontend
+    spec:
+      containers:
+      - name: agri-frontend
+        image: agri-frontend:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agri-frontend
+spec:
+  selector:
+    app: agri-frontend
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: NodePort

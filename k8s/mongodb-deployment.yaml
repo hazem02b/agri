@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agri-mongodb
+  labels:
+    app: agri-mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agri-mongodb
+  template:
+    metadata:
+      labels:
+        app: agri-mongodb
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:latest
+        ports:
+        - containerPort: 27017
+        # En production, ne pas définir les mots de passe ici en clair.
+        # Ici on définit un init basique intercepté par Vault ensuite
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          value: "agriuser"
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          value: "agripassword"
+        - name: MONGO_INITDB_DATABASE
+          value: "agricultural_marketplace"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agri-mongodb
+spec:
+  selector:
+    app: agri-mongodb
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017

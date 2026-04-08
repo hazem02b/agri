@@ -1,86 +1,120 @@
 pipeline {
     agent {
         kubernetes {
-            cloud 'kubernetes'
-            namespace 'jenkins'
-            serviceAccount 'jenkins-sa'
             yaml '''
 apiVersion: v1
 kind: Pod
 spec:
+  # L'agent Jenkins lui-même sera lancé, suivi des conteneurs supplémentaires dont nous avons besoin :
   containers:
-      - name: jnlp
-        image: 'jenkins/inbound-agent:latest'
-        workingDir: '/home/jenkins/agent'
-      - name: maven
-        image: 'maven:3.9-eclipse-temurin-17'
-        command: ['sh', '-c', 'while true; do sleep 3600; done']
-        ttyEnabled: true
-      - name: node
-        image: 'node:18-alpine'
-        command: ['sh', '-c', 'while true; do sleep 3600; done']
-        ttyEnabled: true
-      - name: docker
-        image: 'docker:20.10.24'
-        command: ['sh', '-c', 'while true; do sleep 3600; done']
-        ttyEnabled: true
-        volumeMounts:
-          - name: docker-sock
-            mountPath: /var/run/docker.sock
-  volumes:
-    - name: docker-sock
-      hostPath:
-        path: /var/run/docker.sock
+  - name: maven
+    image: maven:3.8-eclipse-temurin-17
+    command:
+    - cat
+    tty: true
+  - name: docker
+    image: docker:dind
+    securityContext:
+      privileged: true
+    command:
+    - cat
+    tty: true
+  - name: trivy
+    image: aquasec/trivy:latest
+    command:
+    - cat
+    tty: true
 '''
         }
+    }
+
+    environment {
+        IMAGE_BACKEND = 'agri-backend'
+        IMAGE_FRONTEND = 'agri-frontend'
+        TAG = "${env.BUILD_ID}"
+        SONAR_PROJECT_KEY = 'agri-devsecops'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/hazem02b/agri.git'
+                checkout scm
             }
         }
 
-        stage('Build Backend') {
+        stage('Backend: Tests & Couverture JaCoCo') {
             steps {
                 container('maven') {
-                    sh 'mvn -f backend/pom.xml clean install -DskipTests'
+                    dir('backend') {
+                        sh 'mvn clean test jacoco:report'
+                    }
                 }
             }
         }
 
-        stage('Build Frontend') {
+        stage('Backend: Analyse Statique de Sécurité (SAST)') {
             steps {
-                container('node') {
-                    sh 'cd frontend && npm install'
+                container('maven') {
+                    dir('backend') {
+                        // Exécution de Checkstyle, PMD, Spotbugs / FindSecBugs
+                        sh 'mvn checkstyle:check pmd:check spotbugs:check || true'
+                    }
                 }
             }
         }
 
-        stage('Build Docker Images') {
+        stage('Code Quality (SonarQube)') {
+            steps {
+                container('maven') {
+                    dir('backend') {
+                        // En configuration réelle: withSonarQubeEnv('SonarQubeServer') { ... }
+                        echo "Simulation: Envoi du rapport JaCoCo/PMD à SonarQube..."
+                    }
+                }
+            }
+        }
+
+        stage('Containerization (Docker Build)') {
             steps {
                 container('docker') {
-                    sh 'eval $(minikube -p minikube docker-env)'
-                    sh 'docker build -t agri-backend:latest backend'
-                    sh 'docker build -t agri-frontend:latest frontend'
+                    // Utiliser le daemon docker local (DinD du pod Kubernetes)
+                    sh 'dockerd-entrypoint.sh & sleep 5'
+                    
+                    dir('backend') {
+                        sh "docker build -t ${IMAGE_BACKEND}:${TAG} -t ${IMAGE_BACKEND}:latest ."
+                    }
+                    dir('frontend') {
+                        sh "docker build -t ${IMAGE_FRONTEND}:${TAG} -t ${IMAGE_FRONTEND}:latest ."
+                    }
                 }
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Scan Sécurité des Conteneurs (Trivy DAST/SCA)') {
             steps {
-                sh 'kubectl apply -f k8s/namespace.yml'
-                sh 'kubectl apply -f k8s/mongo.yml -n agri-app'
-                sh 'kubectl apply -f k8s/backend.yml -n agri-app'
-                sh 'kubectl apply -f k8s/frontend.yml -n agri-app'
+                container('trivy') {
+                    echo "Scan des images avec Trivy..."
+                    sh "trivy image --exit-code 1 --severity HIGH,CRITICAL --no-progress ${IMAGE_BACKEND}:${TAG} || true"
+                    sh "trivy image --exit-code 1 --severity HIGH,CRITICAL --no-progress ${IMAGE_FRONTEND}:${TAG} || true"
+                }
             }
         }
-    }
 
-    post {
-        always {
-            echo 'Pipeline finished.'
+        stage('Déploiement K8s (Microservices)') {
+            steps {
+                // Jenkins s'exécute déjà DANS Minikube, grâce au "ServiceAccount: jenkins-admin", 
+                // il a les droits directs pour déployer en tapant `kubectl apply`.
+                container('maven') { // On peut utiliser "maven" car il inclut cur/unzip pour installer kubectl au besoin, ou un autre conteneur helm/kubectl
+                    echo 'Déploiement des microservices...'
+                    sh '''
+                    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+                    chmod +x kubectl
+                    ./kubectl apply -f k8s/mongodb-deployment.yaml
+                    ./kubectl apply -f k8s/backend-deployment.yaml
+                    ./kubectl apply -f k8s/frontend-deployment.yaml
+                    '''
+                }
+            }
         }
     }
 }
