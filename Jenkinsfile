@@ -19,6 +19,11 @@ spec:
     volumeMounts:
     - mountPath: /var/run/docker.sock
       name: docker-sock
+  - name: node
+    image: node:18-alpine
+    command:
+    - cat
+    tty: true
   - name: trivy
     image: aquasec/trivy:0.49.1
     command:
@@ -65,6 +70,17 @@ spec:
                     dir('backend') {
                         // Exécution de Checkstyle, PMD, Spotbugs / FindSecBugs
                         sh 'mvn checkstyle:check pmd:check spotbugs:check || true'
+                    }
+                }
+            }
+        }
+
+        stage('Frontend: Node.js & Angular Build') {
+            steps {
+                container('node') {
+                    dir('frontend') {
+                        sh 'npm install'
+                        sh 'npm run build'
                     }
                 }
             }
