@@ -129,7 +129,7 @@ spec:
                 container('maven') { // On peut utiliser "maven" car il inclut cur/unzip pour installer kubectl au besoin, ou un autre conteneur helm/kubectl
                     echo 'Déploiement des microservices...'
                     sh '''
-                    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+                    curl --retry 5 --retry-connrefused -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
                     chmod +x kubectl
                     ./kubectl apply -f k8s/vault-sa.yaml
                     ./kubectl apply -f k8s/mongodb-deployment.yaml
