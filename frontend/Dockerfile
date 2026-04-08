@@ -1,14 +1,12 @@
-# Étape 1: Construire l'application Angular
-FROM node:18-alpine AS build
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build --prod
+# On utilise directement une image Nginx ultra-légère
+FROM nginx:alpine
 
-# Étape 2: Servir l'application avec 'serve'
-FROM node:18-alpine
-RUN npm install -g serve
-COPY --from=build /app/dist/agricultural-marketplace/ /app/dist
-EXPOSE 3000
-CMD ["serve", "-s", "/app/dist/browser", "-l", "3000"]
+# Copie de la configuration Nginx (pour gérer le routage Angular SPA)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# On copie DIRECTEMENT les fichiers déjà compilés par l'agent Node.js de Jenkins
+# Angular 17+ place les fichiers dans le dossier "browser" de dist
+COPY dist/agricultural-marketplace/browser /usr/share/nginx/html
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
