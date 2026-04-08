@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # Base de données pour SonarQube
+  sonarqube-db:
+    image: postgres:15
+    container_name: sonarqube-db
+    environment:
+      - POSTGRES_USER=sonar
+      - POSTGRES_PASSWORD=sonar
+      - POSTGRES_DB=sonarqube
+    volumes:
+      - sonarqube-db-data:/var/lib/postgresql/data
+    networks:
+      - devsecops-net
+
+  # Serveur SonarQube
+  sonarqube:
+    image: sonarqube:9.9.4-community
+    container_name: sonarqube-server
+    depends_on:
+      - sonarqube-db
+    environment:
+      - SONAR_JDBC_URL=jdbc:postgresql://sonarqube-db:5432/sonarqube
+      - SONAR_JDBC_USERNAME=sonar
+      - SONAR_JDBC_PASSWORD=sonar
+    ports:
+      - "9000:9000"
+    volumes:
+      - sonarqube-data:/opt/sonarqube/data
+      - sonarqube-extensions:/opt/sonarqube/extensions
+      - sonarqube-logs:/opt/sonarqube/logs
+    networks:
+      - devsecops-net
+
+  # Serveur Jenkins avec accès à Docker (DinD concept)
+  jenkins:
+    image: jenkins/jenkins:lts-jdk17
+    container_name: jenkins-server
+    user: root
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins-data:/var/jenkins_home
+      # Accès au démon Docker de la machine locale pour faire les build Docker dans Jenkins
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Si Minikube est local, parfois on monte son dossier (optionnel pour la suite)
+    environment:
+      - JAVA_OPTS="-Djenkins.install.runSetupWizard=false"
+    networks:
+      - devsecops-net
+
+volumes:
+  sonarqube-db-data:
+  sonarqube-data:
+  sonarqube-extensions:
+  sonarqube-logs:
+  jenkins-data:
+
+networks:
+  devsecops-net:
+    driver: bridge
