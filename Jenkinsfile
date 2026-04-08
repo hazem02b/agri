@@ -20,7 +20,7 @@ spec:
     - cat
     tty: true
   - name: trivy
-    image: aquasec/trivy:latest
+    image: aquasec/trivy:0.49.1
     command:
     - cat
     tty: true
