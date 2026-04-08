@@ -2,4 +2,4 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: agri-backend-sa
-  namespace: default
+  namespace: devsecops

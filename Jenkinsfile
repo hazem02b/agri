@@ -115,6 +115,7 @@ spec:
                     sh '''
                     curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
                     chmod +x kubectl
+                    ./kubectl apply -f k8s/vault-sa.yaml
                     ./kubectl apply -f k8s/mongodb-deployment.yaml
                     ./kubectl apply -f k8s/backend-deployment.yaml
                     ./kubectl apply -f k8s/frontend-deployment.yaml
