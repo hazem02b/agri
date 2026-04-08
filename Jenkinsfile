@@ -5,7 +5,6 @@ pipeline {
 apiVersion: v1
 kind: Pod
 spec:
-  # L'agent Jenkins lui-même sera lancé, suivi des conteneurs supplémentaires dont nous avons besoin :
   containers:
   - name: maven
     image: maven:3.8-eclipse-temurin-17
@@ -13,17 +12,25 @@ spec:
     - cat
     tty: true
   - name: docker
-    image: docker:dind
-    securityContext:
-      privileged: true
+    image: docker:cli
     command:
     - cat
     tty: true
+    volumeMounts:
+    - mountPath: /var/run/docker.sock
+      name: docker-sock
   - name: trivy
     image: aquasec/trivy:0.49.1
     command:
     - cat
     tty: true
+    volumeMounts:
+    - mountPath: /var/run/docker.sock
+      name: docker-sock
+  volumes:
+  - name: docker-sock
+    hostPath:
+      path: /var/run/docker.sock
 '''
         }
     }
@@ -78,7 +85,6 @@ spec:
             steps {
                 container('docker') {
                     // Utiliser le daemon docker local (DinD du pod Kubernetes)
-                    sh 'dockerd-entrypoint.sh & sleep 5'
                     
                     dir('backend') {
                         sh "docker build -t ${IMAGE_BACKEND}:${TAG} -t ${IMAGE_BACKEND}:latest ."
