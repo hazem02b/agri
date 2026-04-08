@@ -112,6 +112,15 @@ export class CartComponent implements OnInit, OnDestroy {
     }
     const mapEl = document.getElementById('delivery-map');
     if (!mapEl) return;
+    
+    // Fix leaflet marker images 404 by downloading from CDN
+    delete (L.Icon.Default.prototype as any)._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    });
+
     // Center on Tunisia
     this.deliveryMap = L.map('delivery-map').setView([33.8869, 9.5375], 6);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -126,6 +135,9 @@ export class CartComponent implements OnInit, OnDestroy {
       this.deliveryMarker = L.marker([this.deliveryForm.latitude, this.deliveryForm.longitude]).addTo(this.deliveryMap);
       this.deliveryMap.setView([this.deliveryForm.latitude, this.deliveryForm.longitude], 14);
     }
+    
+    // Force map recalculation
+    setTimeout(() => this.deliveryMap?.invalidateSize(), 200);
   }
 
   pickDeliveryLocation(lat: number, lng: number): void {

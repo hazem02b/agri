@@ -826,6 +826,15 @@ export class FarmerDashboardComponent implements OnInit, AfterViewInit, OnDestro
     const mapEl = document.getElementById('order-detail-map');
     if (!mapEl) return;
     if (this.orderDetailsMap) { this.orderDetailsMap.remove(); this.orderDetailsMap = null; }
+    
+    // Fix leaflet marker images 404 by downloading from CDN
+    delete (L.Icon.Default.prototype as any)._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    });
+
     this.orderDetailsMap = L.map('order-detail-map').setView([addr.latitude, addr.longitude], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '\u00a9 OpenStreetMap',
@@ -836,6 +845,9 @@ export class FarmerDashboardComponent implements OnInit, AfterViewInit, OnDestro
       .addTo(this.orderDetailsMap)
       .bindPopup(`<b>${info.name || order.buyerName || 'Client'}</b><br>${addr.street || ''}, ${addr.city || ''}`)
       .openPopup();
+      
+    // Force recalculation
+    setTimeout(() => this.orderDetailsMap?.invalidateSize(), 200);
   }
 
   parseDeliveryNotes(notes?: string): { name: string; phone: string; extra: string } {
