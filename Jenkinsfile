@@ -135,6 +135,7 @@ spec:
                     ./kubectl apply -f k8s/mongodb-deployment.yaml
                     ./kubectl apply -f k8s/backend-deployment.yaml
                     ./kubectl apply -f k8s/frontend-deployment.yaml
+                    ./kubectl apply -f k8s/ingress.yaml
                     '''
                 }
             }
