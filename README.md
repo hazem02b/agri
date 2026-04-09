@@ -1,169 +1,83 @@
-# AgriConnect - Marketplace Agricole (Full-Stack)
+# 🌾 Agri Marketplace - Pipeline DevSecOps & Microservices
 
-Plateforme web pour connecter agriculteurs et clients: publication de produits, commandes, messagerie, logistique, offres d'emploi et paiements.
+![Angular](https://img.shields.io/badge/Angular-DD0031?style=for-the-badge&logo=angular&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)
+![Jenkins](https://img.shields.io/badge/Jenkins-D24939?style=for-the-badge&logo=Jenkins&logoColor=white)
+![Vault](https://img.shields.io/badge/Vault-000000?style=for-the-badge&logo=vault&logoColor=white)
 
-Stack principale:
-- Frontend: Angular 17
-- Backend: Spring Boot 3.2 (Java 17)
-- Base de donnees: MongoDB
+Une plateforme de mise en relation directe entre les agriculteurs et des acheteurs locaux, déployée sur un cluster Kubernetes avec une approche **DevSecOps** complète.
 
-## Fonctionnalites
+## 🏗️ Architecture du Projet
 
-- Authentification JWT (roles CLIENT / AGRICULTEUR)
-- Marketplace produits (catalogue, details, filtres, panier)
-- Commandes et suivi
-- Messagerie en temps reel
-- Logistique (offres, candidatures, suivi)
-- Offres d'emploi (create/edit/apply)
-- Profil utilisateur (photo, informations, mot de passe)
-- Paiements (configuration preprod)
+Le projet adopte une architecture modulaire :
+- **Frontend** : Application Angular avec cartographie interactive (Leaflet).
+- **Backend API** : Spring Boot 3 (API REST, Authentification JWT, Google OAuth2).
+- **Base de données** : MongoDB.
+- **Gestion des Secrets** : HashiCorp Vault (injecteur Kubernetes) pour isoler les mots de passe de la DB.
+- **Routage / Réseau** : NGINX Ingress Controller sur Kubernetes.
 
-## Architecture
+### 🛡️ Pipeline CI/CD (DevSecOps)
+Le projet est packagé via un `Jenkinsfile` qui respecte le cycle suivant :
+1. **Build Node & Angular** (`npm run build`).
+2. **Build Maven** (Tests et compilation du `.jar`).
+3. **Code Quality** : Analyse SonarQube (mock/plugin).
+4. **Containerization** : Création des images Docker (Frontend & Backend).
+5. **Sécurité (DAST/SCA)** : Scan des vulnérabilités des images Docker via **Trivy**.
+6. **Déploiement Continu** : Application des manifestes YAML avec `kubectl apply` sur le cluster Minikube avec Ingress.
 
-- frontend/: application Angular
-- backend/: API Spring Boot + MongoDB
-- scripts *.bat / *.ps1: utilitaires de lancement, test et maintenance
+---
 
-## Prerequis
+## 🚀 Installation & Lancement Local
 
-- Java 17+
-- Maven 3.8+
-- Node.js 18+
-- npm 9+
-- MongoDB Server (mongod)
+### Prérequis
+- [Minikube](https://minikube.sigs.k8s.io/docs/start/) et `kubectl` installés.
+- Docker & Jenkins (Si exécution locale du pipeline).
 
-## Demarrage Rapide (Windows)
+### 1. Configuration du réseau local (Ingress)
+L'application est servie via le domaine `agri-connect.local`. 
+Il faut mapper l'IP de votre cluster Minikube dans le fichier hosts de votre système d'exploitation.
 
-### 1) Cloner
-
-```powershell
-git clone https://github.com/hazem02b/agri.git
-cd agri
+Obtenez l'IP de Minikube :
+```bash
+minikube ip
+```
+Puis ajoutez la ligne suivante dans `/etc/hosts` (ex: `192.168.49.2 agri-connect.local`) :
+```bash
+echo "$(minikube ip) agri-connect.local" | sudo tee -a /etc/hosts
 ```
 
-### 2) Lancer MongoDB
-
-Si `mongod` est dans le PATH:
-
-```powershell
-mongod --dbpath C:\data\db
+### 2. Déploiement K8s manuel (Si sans Jenkins)
+Activer l'Ingress Kubernetes :
+```bash
+minikube addons enable ingress
 ```
 
-Sinon (exemple chemin standard):
-
-```powershell
-& "C:\Program Files\MongoDB\Server\8.2\bin\mongod.exe" "--dbpath" "C:\data\db"
+Déployer les différents composants :
+```bash
+kubectl apply -f k8s/vault-sa.yaml
+kubectl apply -f k8s/mongodb-deployment.yaml
+kubectl apply -f k8s/backend-deployment.yaml
+kubectl apply -f k8s/frontend-deployment.yaml
+kubectl apply -f k8s/ingress.yaml
 ```
 
-### 3) Lancer le backend
+---
 
-```powershell
-cd backend
-mvn spring-boot:run
-```
+## 🌍 Accès à l'application
+- **Plateforme Web :** [http://agri-connect.local](http://agri-connect.local)
+- **API Backend :** [http://agri-connect.local/api](http://agri-connect.local/api)
 
-Backend actif par defaut sur:
-- http://localhost:8081
+*Note : L'authentification Google OAuth peut nécessiter la configuration du nouvel URI d'origine (`http://agri-connect.local`) dans la console Google Cloud.*
 
-### 4) Lancer le frontend
+### 👨‍🌾 Comptes de Test disponibles (Dev)
+- Agriculteur : `agriculteur@agri.com` (MDP : `password123`)
+- Acheteur : `acheteur@agri.com` (MDP : `password123`)
 
-Dans un nouveau terminal:
+---
 
-```powershell
-cd frontend
-npm install
-npm start
-```
-
-Frontend actif sur:
-- http://localhost:4200
-
-## Configuration Importante
-
-### API frontend
-
-Le frontend pointe vers:
-- `frontend/src/environments/environment.ts`
-- `apiUrl: 'http://localhost:8081/api'`
-
-### Seeder (donnees de demo)
-
-Le seeding auto est configurable via:
-- `backend/src/main/resources/application.properties`
-- `app.seed.enabled=false` pour tester a zero
-- `app.seed.enabled=true` pour recreer des donnees de demo au demarrage
-
-## Reset Base de Donnees (test a zero)
-
-1. Arreter backend + mongod
-2. Supprimer le dossier de donnees MongoDB (ex: `C:\data\db`)
-3. Recreer le dossier
-4. Relancer mongod puis backend
-5. Verifier que `app.seed.enabled=false`
-
-## Cache Navigateur (si vous voyez encore d'anciennes donnees)
-
-Dans la console du navigateur sur localhost:4200:
-
-```js
-localStorage.clear();
-sessionStorage.clear();
-location.reload();
-```
-
-## Scripts utiles du repo
-
-- `START.ps1`, `START.bat`: demarrage global
-- `start-backend.ps1`, `START-BACKEND.bat`: backend
-- `reset-db.ps1`: reset base
-- `TESTER-APIS.bat`, `test-API.ps1`: verification API
-
-## API et modules backend
-
-Points techniques principaux:
-- Spring Security + JWT
-- Spring Data MongoDB
-- Validation DTO
-- Services: produits, commandes, messages, jobs, delivery, paiement
-
-## Developpement
-
-### Frontend
-
-```powershell
-cd frontend
-npm start
-```
-
-### Backend
-
-```powershell
-cd backend
-mvn spring-boot:run
-```
-
-### Build
-
-```powershell
-cd frontend
-npm run build
-
-cd ../backend
-mvn clean package
-```
-
-## Troubleshooting
-
-- Port backend deja occupe: verifier 8081 et tuer le processus en conflit.
-- Erreurs d'encodage (texte casse): faire un hard refresh du navigateur et vider local/session storage.
-- MongoDB non trouve: utiliser le chemin complet de `mongod.exe`.
-
-## Contribution
-
-1. Creer une branche feature
-2. Commit propre avec message explicite
-3. Ouvrir une Pull Request
-
-## Licence
-
-Projet academique / demonstrateur.
+## 🛠️ Dépannage fréquent
+- **Cartes Leaflet qui ne s'affichent pas :** Les CSS de base Leaflet et la fonction `invalidateSize()` gèrent l'affichage dynamique dans Angular/Vite.
+- **Erreur CORS Ingress :** L'Ingress et Spring Boot Boot valident le header CORS. Le domaine `agri-connect.local` est whitelisted.
+- **Jenkins : Permission denied (Ingresses)** : Jenkins doit avoir un `Role` RBAC dans K8S l'autorisant sur le groupe API `networking.k8s.io` pour gérer l'Ingress.
