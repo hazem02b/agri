@@ -81,3 +81,15 @@ kubectl apply -f k8s/ingress.yaml
 - **Cartes Leaflet qui ne s'affichent pas :** Les CSS de base Leaflet et la fonction `invalidateSize()` gèrent l'affichage dynamique dans Angular/Vite.
 - **Erreur CORS Ingress :** L'Ingress et Spring Boot Boot valident le header CORS. Le domaine `agri-connect.local` est whitelisted.
 - **Jenkins : Permission denied (Ingresses)** : Jenkins doit avoir un `Role` RBAC dans K8S l'autorisant sur le groupe API `networking.k8s.io` pour gérer l'Ingress.
+
+## ✅ État d'avancement (Ce qui a été fait)
+- **CI/CD complet** : Pipeline Jenkins fonctionnel (Build, Test, Scan Sécurité Trivy, Déploiement K8s, Vault).
+- **Réseau et Accès** : Configuration d'un Ingress NGINX (`agri-connect.local`) remplaçant les port-forwards manuels.
+- **Sécurisation et Réseau** : Configuration complète des règles CORS, et permissions RBAC pour que Jenkins gère l'Ingress.
+- **Correction UI Front-End** : Résolution des bugs complexes d'affichage de la carte géographique (Leaflet / Angular).
+- **Comptes de Test** : Création d'utilisateurs natifs directement en base de données pour vérifier l'intégrité de la plateforme.
+
+## 🔮 Prochaines Étapes / Roadmap (Ce qu'on va faire)
+- **Configuration Google OAuth** : Ajouter l'URI de redirection `http://agri-connect.local` dans la Google Cloud Console pour réactiver le SSO.
+- **Analyse SonarQube** : Passer de la simulation actuelle à une vraie intégration avec un serveur SonarQube pour auditer la dette technique.
+- **Monitoring (Observabilité)** : Mettre en place la stack Prometheus et Grafana pour surveiller la santé du cluster Kubernetes (Pods, ressources, requêtes).
