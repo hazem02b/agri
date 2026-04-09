@@ -105,3 +105,15 @@ kubectl apply -f k8s/ingress.yaml
 - **Configuration Google OAuth** : Ajouter l'URI de redirection `http://agri-connect.local` dans la Google Cloud Console pour réactiver le SSO.
 - **Analyse SonarQube** : Passer de la simulation actuelle à une vraie intégration avec un serveur SonarQube pour auditer la dette technique.
 - **Monitoring (Observabilité)** : Mettre en place la stack Prometheus et Grafana pour surveiller la santé du cluster Kubernetes (Pods, ressources, requêtes).
+
+## ✅ État d'avancement (Ce qui a été fait)
+- **CI/CD complet** : Pipeline Jenkins fonctionnel (Build, Test, Scan Sécurité Trivy, Déploiement K8s, Vault).
+- **Réseau et Accès** : Configuration d'un Ingress NGINX (`agri-connect.local`) remplaçant les port-forwards manuels.
+- **Sécurisation et Réseau** : Configuration complète des règles CORS, et permissions RBAC pour que Jenkins gère l'Ingress.
+- **Correction UI Front-End** : Résolution des bugs complexes d'affichage de la carte géographique (Leaflet / Angular).
+- **Comptes de Test** : Création d'utilisateurs natifs directement en base de données pour vérifier l'intégrité de la plateforme sans dépendre de Google.
+
+## 🔮 Prochaines Étapes / Roadmap (Ce qu'on va faire)
+- **Configuration Google OAuth** : Ajouter l'URI de redirection `http://agri-connect.local` dans la Google Cloud Console pour réactiver le bouton SSO.
+- **Analyse SonarQube** : Passer de la simulation actuelle à une vraie intégration avec un serveur expérimental SonarQube pour auditer la dette technique.
+- **Monitoring (Observabilité)** : Mettre en place la stack DevOps Prometheus et Grafana pour surveiller la consommation du cluster Kubernetes (Pods, ressources CPU, requêtes API horaires).
