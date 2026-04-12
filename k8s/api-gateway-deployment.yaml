@@ -19,11 +19,8 @@ spec:
         image: agri-api-gateway:latest
         imagePullPolicy: IfNotPresent
         env:
-        - name: SPRING_CLOUD_GATEWAY_ROUTES_0_URI
           value: "http://agri-auth-service:8081"
-        - name: SPRING_CLOUD_GATEWAY_ROUTES_1_URI
           value: "http://agri-product-service:8082"
-        - name: SPRING_CLOUD_GATEWAY_ROUTES_2_URI
           value: "http://agri-order-service:8083"
         ports:
         - containerPort: 8080
