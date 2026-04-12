@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import com.agricultural.marketplace.client.AuthServiceClient;
+import com.agricultural.marketplace.dto.UserDto;
 
 import java.util.List;
 
@@ -20,21 +22,22 @@ import java.util.List;
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class MessageController {
     
+
     @Autowired
     private MessageService messageService;
     
-    // User data should be fetched from auth-service via API call
-    private String getCurrentUserId(String email) {
-        // Mock method to bypass UserService dependency
-        return "mock-uuid-for-" + email;
-    }
+    @Autowired
+    private AuthServiceClient authServiceClient;
     
     private User getCurrentUserMock(String email) {
+        UserDto userDto = authServiceClient.getUserByEmail(email);
+        if (userDto == null) {
+            throw new RuntimeException("User not found");
+        }
         User user = new User();
-        user.setId(getCurrentUserId(email));
-        user.setEmail(email);
-        user.setFirstName("Mock");
-        user.setLastName("User");
+        user.setId(userDto.getId());
+        user.setEmail(userDto.getEmail());
+        user.setFirstName(userDto.getName());
         return user;
     }
     

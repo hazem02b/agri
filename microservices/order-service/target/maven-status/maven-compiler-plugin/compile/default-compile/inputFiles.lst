@@ -1,5 +1,6 @@
 /home/hazem/agri-devsecops/microservices/order-service/src/main/java/com/agricultural/marketplace/service/MessageService.java
 /home/hazem/agri-devsecops/microservices/order-service/src/main/java/com/agricultural/marketplace/repository/ConversationRepository.java
+/home/hazem/agri-devsecops/microservices/order-service/src/main/java/com/agricultural/marketplace/dto/ProductDto.java
 /home/hazem/agri-devsecops/microservices/order-service/src/main/java/com/agricultural/marketplace/service/OrderService.java
 /home/hazem/agri-devsecops/microservices/order-service/src/main/java/com/agricultural/marketplace/config/WebSocketConfig.java
 /home/hazem/agri-devsecops/microservices/order-service/src/main/java/com/agricultural/marketplace/dto/CreateConversationRequest.java
@@ -9,11 +10,14 @@
 /home/hazem/agri-devsecops/microservices/order-service/src/main/java/com/agricultural/marketplace/repository/PaymentMethodRepository.java
 /home/hazem/agri-devsecops/microservices/order-service/src/main/java/com/agricultural/marketplace/service/EmailService.java
 /home/hazem/agri-devsecops/microservices/order-service/src/main/java/com/agricultural/marketplace/service/StripeService.java
+/home/hazem/agri-devsecops/microservices/order-service/src/main/java/com/agricultural/marketplace/client/AuthServiceClient.java
+/home/hazem/agri-devsecops/microservices/order-service/src/main/java/com/agricultural/marketplace/dto/UserDto.java
 /home/hazem/agri-devsecops/microservices/order-service/src/main/java/com/agricultural/marketplace/controller/PaymentController.java
 /home/hazem/agri-devsecops/microservices/order-service/src/main/java/com/agricultural/marketplace/controller/DeliveryController.java
 /home/hazem/agri-devsecops/microservices/order-service/src/main/java/com/agricultural/marketplace/model/PaymentMethod.java
 /home/hazem/agri-devsecops/microservices/order-service/src/main/java/com/agricultural/marketplace/repository/DeliveryRouteRepository.java
 /home/hazem/agri-devsecops/microservices/order-service/src/main/java/com/agricultural/marketplace/config/DataInitializer.java
+/home/hazem/agri-devsecops/microservices/order-service/src/main/java/com/agricultural/marketplace/client/ProductServiceClient.java
 /home/hazem/agri-devsecops/microservices/order-service/src/main/java/com/agricultural/marketplace/dto/ApiResponse.java
 /home/hazem/agri-devsecops/microservices/order-service/src/main/java/com/agricultural/marketplace/service/ShippoService.java
 /home/hazem/agri-devsecops/microservices/order-service/src/main/java/com/agricultural/marketplace/controller/OrderController.java

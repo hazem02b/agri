@@ -6,6 +6,14 @@ import com.agricultural.marketplace.repository.OrderRepository;
 import com.agricultural.marketplace.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.agricultural.marketplace.client.ProductServiceClient;
+import com.agricultural.marketplace.client.AuthServiceClient;
+import com.agricultural.marketplace.dto.ProductDto;
+import com.agricultural.marketplace.dto.UserDto;
+import com.agricultural.marketplace.client.ProductServiceClient;
+import com.agricultural.marketplace.client.AuthServiceClient;
+import com.agricultural.marketplace.dto.ProductDto;
+import com.agricultural.marketplace.dto.UserDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,36 +21,45 @@ import java.util.UUID;
 
 @Service
 public class OrderService {
+
+    private User getUserFromAuthService(String email) {
+        UserDto userDto = authServiceClient.getUserByEmail(email);
+        if (userDto == null) {
+            throw new RuntimeException("User not found");
+        }
+        User user = new User();
+        user.setId(userDto.getId());
+        user.setEmail(userDto.getEmail());
+        user.setFirstName(userDto.getName());
+        return user;
+    }
     
     @Autowired
     private OrderRepository orderRepository;
     
     @Autowired
-    private UserRepository userRepository;
+    private ProductServiceClient productServiceClient;
     
     @Autowired
+    private AuthServiceClient authServiceClient;
+    
+@Autowired
     private ShippoService shippoService;
     
     public Order createOrder(List<Order.OrderItem> items, User.Address deliveryAddress, 
                            String deliveryNotes, String customerEmail) {
-        User customer = userRepository.findByEmail(customerEmail)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+        User customer = getUserFromAuthService(customerEmail);
         
         // Validate stock and calculate total (Requires calling product-service API in future)
         double totalAmount = 0.0;
         for (Order.OrderItem item : items) {
-            // Mock product verification for now since DB is decoupled
-            // Product product = callProductServiceHttpApi(item.getProductId());
-            boolean productExists = true; 
-            
-            if (!productExists) {
-                throw new RuntimeException("Insufficient stock for product id: " + item.getProductId());
+            ProductDto product = productServiceClient.getProductById(item.getProductId());
+            if (product == null) {
+                throw new RuntimeException("Product not found: " + item.getProductId());
             }
             
-            // Mock item price calculation for now
-            double mockPrice = 10.0; // Assume all mock items cost 10
-            item.setPrice(mockPrice);
-            item.setSubtotal(mockPrice * item.getQuantity());
+            item.setPrice(product.getPrice());
+            item.setSubtotal(product.getPrice() * item.getQuantity());
             totalAmount += item.getSubtotal();
         }
         
@@ -86,8 +103,7 @@ public class OrderService {
     }
     
     public List<Order> getCustomerOrders(String customerEmail) {
-        User customer = userRepository.findByEmail(customerEmail)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+        User customer = getUserFromAuthService(customerEmail);
         return orderRepository.findByCustomerIdOrderByCreatedAtDesc(customer.getId());
     }
     
@@ -115,8 +131,7 @@ public class OrderService {
     
     public Order cancelOrder(String orderId, String customerEmail) {
         Order order = getOrderById(orderId);
-        User customer = userRepository.findByEmail(customerEmail)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+        User customer = getUserFromAuthService(customerEmail);
         
         if (!order.getCustomerId().equals(customer.getId())) {
             throw new RuntimeException("You can only cancel your own orders");
@@ -137,8 +152,7 @@ public class OrderService {
     }
     
     public List<Order> getFarmerOrders(String farmerEmail) {
-        User farmer = userRepository.findByEmail(farmerEmail)
-                .orElseThrow(() -> new RuntimeException("Farmer not found"));
+        User farmer = getUserFromAuthService(farmerEmail);
         return orderRepository.findByFarmerIdOrderByCreatedAtDesc(farmer.getId());
     }
     

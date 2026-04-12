@@ -23,6 +23,17 @@ public class UserController {
     @Autowired
     private UserService userService;
     
+    @GetMapping
+    public ResponseEntity<?> getUserByEmail(@RequestParam("email") String email) {
+        try {
+            User user = userService.getUserByEmail(email);
+            if (user != null) { user.setPassword(null); }
+            return ResponseEntity.ok(user);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, "User not found"));
+        }
+    }
+    
     /**
      * Get current user profile
      */

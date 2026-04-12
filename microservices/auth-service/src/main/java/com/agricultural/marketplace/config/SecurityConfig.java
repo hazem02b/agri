@@ -75,6 +75,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/farmers/public/**").permitAll()
                 // Jobs endpoints (public for viewing)
                 .requestMatchers("/api/jobs", "/api/jobs/*").permitAll()
+                // Allow inter-service communication without JWT token forwarding for now
+                .requestMatchers("/api/users**").permitAll()
                 // Users list by role (for messaging - authenticated users only)
                 .requestMatchers("/api/users/by-role").authenticated()
                 // All other requests require authentication
