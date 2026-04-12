@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: agri-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - agricultural-network
+
+  auth-service:
+    build: ./auth-service
+    container_name: agri-auth-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/marketplace_auth
+    depends_on:
+      - mongodb
+    networks:
+      - agricultural-network
+
+  product-service:
+    build: ./product-service
+    container_name: agri-product-service
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/marketplace_product
+    depends_on:
+      - mongodb
+    networks:
+      - agricultural-network
+
+  order-service:
+    build: ./order-service
+    container_name: agri-order-service
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/marketplace_order
+      # Setting Feign client URLs to use container names
+      - product-service.url=http://product-service:8082
+      - auth-service.url=http://auth-service:8081
+    depends_on:
+      - mongodb
+      - auth-service
+      - product-service
+    networks:
+      - agricultural-network
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: agri-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      # L'API Gateway doit pointer vers les noms réseau Docker
+      - SPRING_CLOUD_GATEWAY_ROUTES_0_URI=http://auth-service:8081
+      - SPRING_CLOUD_GATEWAY_ROUTES_1_URI=http://product-service:8082
+      - SPRING_CLOUD_GATEWAY_ROUTES_2_URI=http://order-service:8083
+    depends_on:
+      - auth-service
+      - product-service
+      - order-service
+    networks:
+      - agricultural-network
+
+  # frontend:
+  #   build: ../frontend
+  #   container_name: agricultural-frontend
+  #   ports:
+  #     - "4200:80"
+  #   depends_on:
+  #     - api-gateway
+  #   networks:
+  #     - agricultural-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  agricultural-network:
+    driver: bridge
