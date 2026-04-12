@@ -42,7 +42,6 @@ services:
       - "8083:8083"
     environment:
       - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/marketplace_order
-      # Setting Feign client URLs to use container names
       - product-service.url=http://product-service:8082
       - auth-service.url=http://auth-service:8081
     depends_on:
@@ -57,11 +56,6 @@ services:
     container_name: agri-api-gateway
     ports:
       - "8080:8080"
-    environment:
-      # L'API Gateway doit pointer vers les noms réseau Docker
-      - SPRING_CLOUD_GATEWAY_ROUTES_0_URI=http://auth-service:8081
-      - SPRING_CLOUD_GATEWAY_ROUTES_1_URI=http://product-service:8082
-      - SPRING_CLOUD_GATEWAY_ROUTES_2_URI=http://order-service:8083
     depends_on:
       - auth-service
       - product-service
@@ -69,19 +63,8 @@ services:
     networks:
       - agricultural-network
 
-  # frontend:
-  #   build: ../frontend
-  #   container_name: agricultural-frontend
-  #   ports:
-  #     - "4200:80"
-  #   depends_on:
-  #     - api-gateway
-  #   networks:
-  #     - agricultural-network
-
 volumes:
   mongodb_data:
 
 networks:
   agricultural-network:
-    driver: bridge

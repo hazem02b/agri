@@ -19,25 +19,61 @@ spring:
               - OPTIONS
             allowedHeaders: "*"
       routes:
-        # Routage vers Auth Service (Identité, Profils Utilisateurs et Agriculteurs)
-        - id: auth-service
-          uri: http://localhost:8081
+        - id: auth-service-1
+          uri: http://agri-auth-service:8081
           predicates:
-            - Path=/api/auth/**, /api/users/**, /api/farmers/**
+            - Path=/api/auth/**
             
-        # Routage vers Product Service (Catalogue Produits, Offres d'Emploi, Statistiques libres)
-        - id: product-service
-          uri: http://localhost:8082
+        - id: auth-service-2
+          uri: http://agri-auth-service:8081
           predicates:
-            - Path=/api/products/**, /api/jobs/**, /api/stats/**
+            - Path=/api/users/**
             
-        # Routage vers Order Service (Commandes, Messagerie via WebSockets, Livraisons, Paiements)
-        - id: order-service
-          uri: http://localhost:8083
+        - id: auth-service-3
+          uri: http://agri-auth-service:8081
           predicates:
-            - Path=/api/orders/**, /api/messages/**, /api/delivery/**, /api/payments/**, /ws/**
+            - Path=/api/farmers/**
+            
+        - id: product-service-1
+          uri: http://agri-product-service:8082
+          predicates:
+            - Path=/api/products/**
+            
+        - id: product-service-2
+          uri: http://agri-product-service:8082
+          predicates:
+            - Path=/api/jobs/**
+            
+        - id: product-service-3
+          uri: http://agri-product-service:8082
+          predicates:
+            - Path=/api/stats/**
+            
+        - id: order-service-1
+          uri: http://agri-order-service:8083
+          predicates:
+            - Path=/api/orders/**
+            
+        - id: order-service-2
+          uri: http://agri-order-service:8083
+          predicates:
+            - Path=/api/messages/**
+            
+        - id: order-service-3
+          uri: http://agri-order-service:8083
+          predicates:
+            - Path=/api/delivery/**
+            
+        - id: order-service-4
+          uri: http://agri-order-service:8083
+          predicates:
+            - Path=/api/payments/**
+            
+        - id: order-service-ws
+          uri: ws://agri-order-service:8083
+          predicates:
+            - Path=/ws/**
 
-# Configuration Actuator pour surveiller la santé de la gateway
 management:
   endpoints:
     web:
