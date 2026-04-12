@@ -1,10 +1,8 @@
 package com.agricultural.marketplace.service;
 
 import com.agricultural.marketplace.model.Order;
-import com.agricultural.marketplace.model.Product;
 import com.agricultural.marketplace.model.User;
 import com.agricultural.marketplace.repository.OrderRepository;
-import com.agricultural.marketplace.repository.ProductRepository;
 import com.agricultural.marketplace.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,9 +18,6 @@ public class OrderService {
     private OrderRepository orderRepository;
     
     @Autowired
-    private ProductRepository productRepository;
-    
-    @Autowired
     private UserRepository userRepository;
     
     @Autowired
@@ -33,23 +28,22 @@ public class OrderService {
         User customer = userRepository.findByEmail(customerEmail)
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
         
-        // Validate stock and calculate total
+        // Validate stock and calculate total (Requires calling product-service API in future)
         double totalAmount = 0.0;
         for (Order.OrderItem item : items) {
-            Product product = productRepository.findById(item.getProductId())
-                    .orElseThrow(() -> new RuntimeException("Product not found: " + item.getProductId()));
+            // Mock product verification for now since DB is decoupled
+            // Product product = callProductServiceHttpApi(item.getProductId());
+            boolean productExists = true; 
             
-            if (product.getStock() < item.getQuantity()) {
-                throw new RuntimeException("Insufficient stock for product: " + product.getName());
+            if (!productExists) {
+                throw new RuntimeException("Insufficient stock for product id: " + item.getProductId());
             }
             
-            item.setPrice(product.getPrice());
-            item.setSubtotal(product.getPrice() * item.getQuantity());
+            // Mock item price calculation for now
+            double mockPrice = 10.0; // Assume all mock items cost 10
+            item.setPrice(mockPrice);
+            item.setSubtotal(mockPrice * item.getQuantity());
             totalAmount += item.getSubtotal();
-            
-            // Update stock
-            product.setStock(product.getStock() - item.getQuantity());
-            productRepository.save(product);
         }
         
         Order order = new Order();
@@ -133,13 +127,10 @@ public class OrderService {
             throw new RuntimeException("Cannot cancel this order");
         }
         
-        // Restore stock
+        // Restore stock via product-service API in future
         for (Order.OrderItem item : order.getItems()) {
-            Product product = productRepository.findById(item.getProductId()).orElse(null);
-            if (product != null) {
-                product.setStock(product.getStock() + item.getQuantity());
-                productRepository.save(product);
-            }
+            // Mock stock restore
+            System.out.println("Restoring stock for product " + item.getProductId());
         }
         
         return updateOrderStatus(orderId, Order.OrderStatus.CANCELLED, "Order cancelled by customer");
