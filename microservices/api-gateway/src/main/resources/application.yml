@@ -1,0 +1,48 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+      routes:
+        # Routage vers Auth Service (Identité, Profils Utilisateurs et Agriculteurs)
+        - id: auth-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/auth/**, /api/users/**, /api/farmers/**
+            
+        # Routage vers Product Service (Catalogue Produits, Offres d'Emploi, Statistiques libres)
+        - id: product-service
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/products/**, /api/jobs/**, /api/stats/**
+            
+        # Routage vers Order Service (Commandes, Messagerie via WebSockets, Livraisons, Paiements)
+        - id: order-service
+          uri: http://localhost:8083
+          predicates:
+            - Path=/api/orders/**, /api/messages/**, /api/delivery/**, /api/payments/**, /ws/**
+
+# Configuration Actuator pour surveiller la santé de la gateway
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, gateway
+  endpoint:
+    health:
+      show-details: always
