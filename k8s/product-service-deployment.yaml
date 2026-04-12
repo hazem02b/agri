@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agri-product-service
+  labels:
+    app: agri-product-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agri-product-service
+  template:
+    metadata:
+      labels:
+        app: agri-product-service
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "agri-backend-role"
+        vault.hashicorp.com/agent-inject-secret-application.properties: "secret/data/agri/db"
+        vault.hashicorp.com/agent-inject-template-application.properties: |
+          {{- with secret "secret/data/agri/db" -}}
+          spring.data.mongodb.uri=mongodb://{{ .Data.data.username }}:{{ .Data.data.password }}@agri-mongodb:27017/marketplace_product?authSource=admin
+          server.port=8082
+          {{- end }}
+    spec:
+      serviceAccountName: agri-backend-sa
+      containers:
+      - name: agri-product-service
+        image: agri-product-service:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: SPRING_CONFIG_ADDITIONAL_LOCATION
+          value: "file:/vault/secrets/application.properties"
+        ports:
+        - containerPort: 8082
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agri-product-service
+spec:
+  selector:
+    app: agri-product-service
+  ports:
+    - protocol: TCP
+      port: 8082
+      targetPort: 8082
+  type: ClusterIP

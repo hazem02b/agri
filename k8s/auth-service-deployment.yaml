@@ -1,51 +1,48 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: agri-backend
+  name: agri-auth-service
   labels:
-    app: agri-backend
+    app: agri-auth-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: agri-backend
+      app: agri-auth-service
   template:
     metadata:
       labels:
-        app: agri-backend
-      # ===== HASHICORP VAULT AGENT INJECTOR =====
-      # C'est ici que l'approche DevSecOps de Vault prend effet
+        app: agri-auth-service
       annotations:
         vault.hashicorp.com/agent-inject: "true"
         vault.hashicorp.com/role: "agri-backend-role"
         vault.hashicorp.com/agent-inject-secret-application.properties: "secret/data/agri/db"
         vault.hashicorp.com/agent-inject-template-application.properties: |
           {{- with secret "secret/data/agri/db" -}}
-          spring.data.mongodb.uri=mongodb://{{ .Data.data.username }}:{{ .Data.data.password }}@agri-mongodb:27017/agricultural_marketplace?authSource=admin
-          server.port=8080
-
+          spring.data.mongodb.uri=mongodb://{{ .Data.data.username }}:{{ .Data.data.password }}@agri-mongodb:27017/marketplace_auth?authSource=admin
+          server.port=8081
           {{- end }}
     spec:
       serviceAccountName: agri-backend-sa
       containers:
-      - name: agri-backend
-        image: agri-backend:latest
+      - name: agri-auth-service
+        image: agri-auth-service:latest
         imagePullPolicy: IfNotPresent
         env:
         - name: SPRING_CONFIG_ADDITIONAL_LOCATION
           value: "file:/vault/secrets/application.properties"
         ports:
-        - containerPort: 8080
+        - containerPort: 8081
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: agri-backend
+  name: agri-auth-service
 spec:
   selector:
-    app: agri-backend
+    app: agri-auth-service
   ports:
     - protocol: TCP
-      port: 8080
-      targetPort: 8080
-  type: NodePort
+      port: 8081
+      targetPort: 8081
+  type: ClusterIP

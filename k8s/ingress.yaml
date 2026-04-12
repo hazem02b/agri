@@ -15,7 +15,7 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: agri-backend
+            name: agri-api-gateway
             port:
               number: 8080
       - path: /

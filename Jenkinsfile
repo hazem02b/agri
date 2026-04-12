@@ -156,7 +156,10 @@ spec:
                     chmod +x kubectl
                     ./kubectl apply -f k8s/vault-sa.yaml
                     ./kubectl apply -f k8s/mongodb-deployment.yaml
-                    ./kubectl apply -f k8s/backend-deployment.yaml
+                    ./kubectl apply -f k8s/api-gateway-deployment.yaml
+                    ./kubectl apply -f k8s/auth-service-deployment.yaml
+                    ./kubectl apply -f k8s/product-service-deployment.yaml
+                    ./kubectl apply -f k8s/order-service-deployment.yaml
                     ./kubectl apply -f k8s/frontend-deployment.yaml
                     ./kubectl apply -f k8s/ingress.yaml
                     '''
