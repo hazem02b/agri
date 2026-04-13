@@ -21,6 +21,7 @@ spec:
           {{- with secret "secret/data/agri/db" -}}
           spring.data.mongodb.uri=mongodb://{{ .Data.data.username }}:{{ .Data.data.password }}@agri-mongodb:27017/marketplace_order?authSource=admin
           server.port=8083
+          cors.allowed.origins=*
           product-service.url=http://agri-product-service:8082
           auth-service.url=http://agri-auth-service:8081
           {{- end }}
