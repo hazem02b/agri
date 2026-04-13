@@ -1,119 +1,94 @@
-# 🌾 Agri Marketplace - Pipeline DevSecOps & Microservices
+# 🌱 Plateforme Marketplace Agricole (Architecture Microservices & DevSecOps)
 
-![Angular](https://img.shields.io/badge/Angular-DD0031?style=for-the-badge&logo=angular&logoColor=white)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)
-![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)
-![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)
-![Jenkins](https://img.shields.io/badge/Jenkins-D24939?style=for-the-badge&logo=Jenkins&logoColor=white)
-![Vault](https://img.shields.io/badge/Vault-000000?style=for-the-badge&logo=vault&logoColor=white)
-
-Une plateforme de mise en relation directe entre les agriculteurs et des acheteurs locaux, déployée sur un cluster Kubernetes avec une approche **DevSecOps** complète.
-
-## 🏗️ Architecture du Projet
-
-Le projet adopte une architecture modulaire :
-- **Frontend** : Application Angular avec cartographie interactive (Leaflet).
-- **Backend API** : Spring Boot 3 (API REST, Authentification JWT, Google OAuth2).
-- **Base de données** : MongoDB.
-- **Gestion des Secrets** : HashiCorp Vault (injecteur Kubernetes) pour isoler les mots de passe de la DB.
-- **Routage / Réseau** : NGINX Ingress Controller sur Kubernetes.
-
-### 🛡️ Pipeline CI/CD (DevSecOps)
-Le projet est packagé via un `Jenkinsfile` qui respecte le cycle suivant :
-1. **Build Node & Angular** (`npm run build`).
-2. **Build Maven** (Tests et compilation du `.jar`).
-3. **Code Quality** : Analyse SonarQube (mock/plugin).
-4. **Containerization** : Création des images Docker (Frontend & Backend).
-5. **Sécurité (DAST/SCA)** : Scan des vulnérabilités des images Docker via **Trivy**.
-6. **Déploiement Continu** : Application des manifestes YAML avec `kubectl apply` sur le cluster Minikube avec Ingress.
+Bienvenue sur le dépôt principal de la plateforme **Agri-Marketplace**.  
+Ce projet propose une solution complète pour mettre en relation directe **Agriculteurs** et **Clients**, développée suivant une architecture Microservices et des pratiques avancées **DevSecOps**.
 
 ---
 
-## 🚀 Installation & Lancement Local
+## 🏗 Architecture Globale
 
-### Prérequis
-- [Minikube](https://minikube.sigs.k8s.io/docs/start/) et `kubectl` installés.
-- Docker & Jenkins (Si exécution locale du pipeline).
+Le projet est divisé en plusieurs briques logicielles conteneurisées avec Docker et orchestrées via Kubernetes (Minikube).
 
-### 1. Configuration du réseau local (Ingress)
-L'application est servie via le domaine `agri-connect.local`. 
-Il faut mapper l'IP de votre cluster Minikube dans le fichier hosts de votre système d'exploitation.
+### 🖥️ 1. Frontend (Interface Utilisateur)
+* **Technologie :** Angular 17+ 
+* **Serveur web :** Nginx
+* **Rôles :** Espace Client (Customer) & Espace Agriculteur (Farmer).
+* **Particularité :** Nginx agit comme Proxy Inversé (Reverse Proxy) pour relayer les requêtes `/api/` vers l'API Gateway, gérant de manière transparente les soucis de CORS sur les navigateurs web.
 
-Obtenez l'IP de Minikube :
+### ⚙️ 2. Backend (Microservices Spring Boot Java 17)
+L'architecture Microservices repose sur :
+1. `api-gateway` : Le routeur central. Redirige dynamiquement le trafic réseau vers le bon microservice.
+2. `auth-service` : Gère les inscriptions, la connexion et l'émission des tokens de sécurité (JWT).
+3. `product-service` : Gère le catalogue des produits agricoles, fermes, et offres d'emploi.
+4. `order-service` : Gère le système de création de commandes, paiements, paniers, et la messagerie temps réel (WebSockets).
+
+### 🗄️ 3. Bases de Données & Stockage Local
+* **MongoDB** : Base de données NoSQL distribuée (Collections séparées par Microservice : `marketplace_auth`, `marketplace_product`, `marketplace_order`).
+
+---
+
+## 🔐 Pilier Sécurité (DevSecOps)
+
+L'un des plus grands atouts de ce dépôt réside dans son architecture de sécurité centralisée :
+
+* **HashiCorp Vault :** Déployé au cœur de Kubernetes, Vault agit comme un coffre-fort hautement sécurisé pour l'infrastructure. **Aucun système de mot de passe, ni URI de base de données n'est stocké en clair dans le code Java.**
+* **Injection K8s & Spring Boot :** Lors du démarrage des Pods, l'injecteur Vault de Kubernetes convertit de façon dynamique les secrets récupérés (identifiants DB) en un fichier `application.properties` que Spring Boot vient lire.
+* **Spring Security & CORS strict :** Protège farouchement les points d'entrée de chaque service avec des stratégies `allowedOriginPatterns` et de l'en-tête Bearer (JWT Token).
+
+---
+
+## 🔄 Pilier CI/CD (Automatisation)
+
+* **Jenkins Intégré (Kubernetes Cloud) :** Le service Jenkins tourne de manière native sous forme de Pod à l'intérieur de l'espace de noms `devsecops`. 
+* **Agents Dynamiques (Esclaves-Jnlp) :** Jenkins instancie à la volée des esclaves de compilation éphémères (Pods) afin de compiler le code (Maven), puis les détruit à la fin du processus pour optimiser la mémoire du Cluster.
+
+---
+
+## 🚀 Démarrage Rapide (Déploiement)
+
+### 1. Prérequis
+Garantir que les éléments suivants sont installés :
+* `Docker` (Engine)
+* `Minikube` (Cluster local Kubernetes)
+* `kubectl` (CLI Kubernetes)
+* `Helm` (Optionnel mais recommandé)
+
+### 2. Procédure de déploiement (Kubernetes)
+Exécuter l'application depuis le terminal :
+
 ```bash
-minikube ip
-```
-Puis ajoutez la ligne suivante dans `/etc/hosts` (ex: `192.168.49.2 agri-connect.local`) :
-```bash
-echo "$(minikube ip) agri-connect.local" | sudo tee -a /etc/hosts
-```
+# 1. Démarrer Minikube
+minikube start
 
-### 2. Déploiement K8s manuel (Si sans Jenkins)
-Activer l'Ingress Kubernetes :
-```bash
-minikube addons enable ingress
-```
+# 2. Créer l'espace de travail (namespace)
+kubectl create namespace devsecops
 
-Déployer les différents composants :
-```bash
-kubectl apply -f k8s/vault-sa.yaml
-kubectl apply -f k8s/mongodb-deployment.yaml
-kubectl apply -f k8s/backend-deployment.yaml
-kubectl apply -f k8s/frontend-deployment.yaml
-kubectl apply -f k8s/ingress.yaml
+# 3. Déployer l'infrastructure lourde (MongoDB / Vault / Jenkins)
+kubectl apply -f k8s/mongodb-deployment.yaml -n devsecops
+# (Configurer les secrets HashiCorp Vault manuellement / par script)
+
+# 4. Appliquer les déploiements Microservices Backend & Frontend
+kubectl apply -f k8s/api-gateway-deployment.yaml -n devsecops
+kubectl apply -f k8s/auth-service-deployment.yaml -n devsecops
+kubectl apply -f k8s/product-service-deployment.yaml -n devsecops
+kubectl apply -f k8s/order-service-deployment.yaml -n devsecops
+
+kubectl apply -f k8s/frontend-deployment.yaml -n devsecops
+
+# 5. Récupérer l'URL de l'application Front-End
+minikube service agri-frontend -n devsecops --url
 ```
 
 ---
 
-## 🌍 Accès à l'application
-- **Plateforme Web :** [http://agri-connect.local](http://agri-connect.local)
-- **API Backend :** [http://agri-connect.local/api](http://agri-connect.local/api)
+## 👥 Comptes de démonstration pré-configurés
+**Agriculteur Test :** 
+* Email : `alex@agriculteur.fr` 
+* Pass : `Password123!`
 
-*Note : L'authentification Google OAuth peut nécessiter la configuration du nouvel URI d'origine (`http://agri-connect.local`) dans la console Google Cloud.*
-
-### 👨‍🌾 Comptes de Test disponibles (Dev)
-- Agriculteur : `agriculteur@agri.com` (MDP : `password123`)
-- Acheteur : `acheteur@agri.com` (MDP : `password123`)
+**Client Test :** 
+* Email : `thomas@client.fr` 
+* Pass : `Password123!`
 
 ---
-
-## 🛠️ Dépannage fréquent
-- **Cartes Leaflet qui ne s'affichent pas :** Les CSS de base Leaflet et la fonction `invalidateSize()` gèrent l'affichage dynamique dans Angular/Vite.
-- **Erreur CORS Ingress :** L'Ingress et Spring Boot Boot valident le header CORS. Le domaine `agri-connect.local` est whitelisted.
-- **Jenkins : Permission denied (Ingresses)** : Jenkins doit avoir un `Role` RBAC dans K8S l'autorisant sur le groupe API `networking.k8s.io` pour gérer l'Ingress.
-
-## ✅ État d'avancement (Ce qui a été fait)
-- **CI/CD complet** : Pipeline Jenkins fonctionnel (Build, Test, Scan Sécurité Trivy, Déploiement K8s, Vault).
-- **Réseau et Accès** : Configuration d'un Ingress NGINX (`agri-connect.local`) remplaçant les port-forwards manuels.
-- **Sécurisation et Réseau** : Configuration complète des règles CORS, et permissions RBAC pour que Jenkins gère l'Ingress.
-- **Correction UI Front-End** : Résolution des bugs complexes d'affichage de la carte géographique (Leaflet / Angular).
-- **Comptes de Test** : Création d'utilisateurs natifs directement en base de données pour vérifier l'intégrité de la plateforme.
-
-## 🔮 Prochaines Étapes / Roadmap (Ce qu'on va faire)
-- **Configuration Google OAuth** : Ajouter l'URI de redirection `http://agri-connect.local` dans la Google Cloud Console pour réactiver le SSO.
-- **Analyse SonarQube** : Passer de la simulation actuelle à une vraie intégration avec un serveur SonarQube pour auditer la dette technique.
-- **Monitoring (Observabilité)** : Mettre en place la stack Prometheus et Grafana pour surveiller la santé du cluster Kubernetes (Pods, ressources, requêtes).
-
-## ✅ État d'avancement (Ce qui a été fait)
-- **CI/CD complet** : Pipeline Jenkins fonctionnel (Build, Test, Scan Sécurité Trivy, Déploiement K8s, Vault).
-- **Réseau et Accès** : Configuration d'un Ingress NGINX (`agri-connect.local`) remplaçant les port-forwards manuels.
-- **Sécurisation et Réseau** : Configuration complète des règles CORS, et permissions RBAC pour que Jenkins gère l'Ingress.
-- **Correction UI Front-End** : Résolution des bugs complexes d'affichage de la carte géographique (Leaflet / Angular).
-- **Comptes de Test** : Création d'utilisateurs natifs directement en base de données pour vérifier l'intégrité de la plateforme.
-
-## 🔮 Prochaines Étapes / Roadmap (Ce qu'on va faire)
-- **Configuration Google OAuth** : Ajouter l'URI de redirection `http://agri-connect.local` dans la Google Cloud Console pour réactiver le SSO.
-- **Analyse SonarQube** : Passer de la simulation actuelle à une vraie intégration avec un serveur SonarQube pour auditer la dette technique.
-- **Monitoring (Observabilité)** : Mettre en place la stack Prometheus et Grafana pour surveiller la santé du cluster Kubernetes (Pods, ressources, requêtes).
-
-## ✅ État d'avancement (Ce qui a été fait)
-- **CI/CD complet** : Pipeline Jenkins fonctionnel (Build, Test, Scan Sécurité Trivy, Déploiement K8s, Vault).
-- **Réseau et Accès** : Configuration d'un Ingress NGINX (`agri-connect.local`) remplaçant les port-forwards manuels.
-- **Sécurisation et Réseau** : Configuration complète des règles CORS, et permissions RBAC pour que Jenkins gère l'Ingress.
-- **Correction UI Front-End** : Résolution des bugs complexes d'affichage de la carte géographique (Leaflet / Angular).
-- **Comptes de Test** : Création d'utilisateurs natifs directement en base de données pour vérifier l'intégrité de la plateforme sans dépendre de Google.
-
-## 🔮 Prochaines Étapes / Roadmap (Ce qu'on va faire)
-- **Configuration Google OAuth** : Ajouter l'URI de redirection `http://agri-connect.local` dans la Google Cloud Console pour réactiver le bouton SSO.
-- **Analyse SonarQube** : Passer de la simulation actuelle à une vraie intégration avec un serveur expérimental SonarQube pour auditer la dette technique.
-- **Monitoring (Observabilité)** : Mettre en place la stack DevOps Prometheus et Grafana pour surveiller la consommation du cluster Kubernetes (Pods, ressources CPU, requêtes API horaires).
+*Ce projet est maintenu sur la branche `feature/microservices-architecture` au cours de son refactoring.*
