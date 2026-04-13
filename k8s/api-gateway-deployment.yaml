@@ -18,10 +18,6 @@ spec:
       - name: agri-api-gateway
         image: agri-api-gateway:latest
         imagePullPolicy: IfNotPresent
-        env:
-          value: "http://agri-auth-service:8081"
-          value: "http://agri-product-service:8082"
-          value: "http://agri-order-service:8083"
         ports:
         - containerPort: 8080
 ---
@@ -36,4 +32,3 @@ spec:
     - protocol: TCP
       port: 8080
       targetPort: 8080
-  type: NodePort
