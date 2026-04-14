@@ -40,3 +40,4 @@ logs/
 *.tmp
 *.bak
 *.swp
+\nmicroservices/*/target/
