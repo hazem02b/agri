@@ -2,7 +2,12 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: agri-api-gateway
-  labels:
+  annotations:
+
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/actuator/prometheus"
+      labels:
     app: agri-api-gateway
 spec:
   replicas: 1
@@ -11,24 +16,4 @@ spec:
       app: agri-api-gateway
   template:
     metadata:
-      labels:
-        app: agri-api-gateway
-    spec:
-      containers:
-      - name: agri-api-gateway
-        image: agri-api-gateway:latest
-        imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 8080
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: agri-api-gateway
-spec:
-  selector:
-    app: agri-api-gateway
-  ports:
-    - protocol: TCP
-      port: 8080
-      targetPort: 8080
+      
