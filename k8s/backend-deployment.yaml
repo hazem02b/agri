@@ -1,112 +1,71 @@
-# ===== KUBERNETES DEPLOYMENT CONFIGURATION =====
-# Ce fichier définit comment déployer le backend Spring Boot sur Kubernetes
-# Utilisé dans le pipeline CI/CD Jenkins pour déployer sur Minikube
+# Kubernetes Deployment Configuration - Backend Spring Boot
 
-apiVersion: apps/v1  # Version de l'API Kubernetes (apps/v1 pour les Deployments)
-kind: Deployment     # Type de ressource: Deployment (gère les réplicas de pods)
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: agri-backend  # Nom unique du deployment dans le cluster Kubernetes
+  name: agri-backend
   labels:
     app: agri-backend
 spec:
-  replicas: 1  # ⭐ IMPORTANTE: Nombre de pods à créer et maintenir
-             # Valeur actuelle: 1 = une seule instance du backend
-             # Pour haute disponibilité: augmenter à 3 ou 5
-             # Kubernetes redémarrera automatiquement les pods crashés
+  replicas: 1  # ⭐ Nombre de pods (augmenter à 3-5 pour haute disponibilité)
   selector:
     matchLabels:
-      app: agri-backend  # ⭐ IMPORTANTE: Kubernetes sélectionne les pods avec ce label
-                         # Le deployment gère TOUS les pods avec ce label
-                         # Chaque pod créé doit avoir exactement ce label
-  template:  # Template de pod - définit comment créer chaque pod
+      app: agri-backend  # ⭐ Kubernetes sélectionne les pods avec ce label
+  template:
     metadata:
       labels:
-        app: agri-backend  # ⭐ IMPORTANTE: Label du pod (DOIT correspondre à selector.matchLabels)
-                          # Kubernetes utilise ce label pour identifier ses pods
-      # ===== HASHICORP VAULT AGENT INJECTOR (SÉCURITÉ CRITIQUE) =====
-      # ⭐ IMPORTANT: Injecte automatiquement les secrets (mots de passe, clés API)
-      # sans les stocker en dur dans le YAML ou dans les images Docker
-      # Cela résout le problème: "Comment stocker les secrets de manière sécurisée?"
+        app: agri-backend
+      # ⭐ Vault injecte les secrets (password, clés API) sans les exposer
       annotations:
-        vault.hashicorp.com/agent-inject: "true"  # ⭐ ACTIVE l'injection de secrets
-        vault.hashicorp.com/role: "agri-backend-role"  # Rôle RBAC dans Vault (qui peut accéder aux secrets)
-        vault.hashicorp.com/agent-inject-secret-application.properties: "secret/data/agri/db"  # ⭐ Chemin des secrets dans Vault
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "agri-backend-role"
+        vault.hashicorp.com/agent-inject-secret-application.properties: "secret/data/agri/db"
         vault.hashicorp.com/agent-inject-template-application.properties: |
-          # ⭐ IMPORTANT: Template Golang qui génère le fichier application.properties dynamiquement
-          # {{- with secret "secret/data/agri/db" -}} = Récupère les secrets de Vault
-          # {{ .Data.data.username }} = Injecte l'username depuis Vault
-          # {{ .Data.data.password }} = Injecte le password depuis Vault (JAMAIS en clair dans le YAML!)
           {{- with secret "secret/data/agri/db" -}}
-          # Configuration MongoDB (injectée dynamiquement par Vault)
-          spring.data.mongodb.uri=mongodb://{{ .Data.data.username }}:{{ .Data.data.password }}@agri-mongodb:27017/agricultural_marketplace?authSource=admin  # URI MongoDB avec credentials
-          server.port=8080  # Port Spring Boot
+          spring.data.mongodb.uri=mongodb://{{ .Data.data.username }}:{{ .Data.data.password }}@agri-mongodb:27017/agricultural_marketplace?authSource=admin
+          server.port=8080
           {{- end }}
     spec:
-      serviceAccountName: agri-backend-sa  # ⭐ IMPORTANTE: Service Account pour accès Vault (RBAC)
-                                           # Permet au pod d'authentifier avec Vault et récupérer les secrets
-                                           # Sans ce SA, le pod ne peut pas accéder aux secrets
+      serviceAccountName: agri-backend-sa  # Service Account pour accès Vault
       containers:
-      - name: agri-backend  # Nom du container dans le pod
-        image: agri-backend:latest  # ⭐ IMPORTANTE: Image Docker à utiliser
-                                     # Format: [registry]/[namespace]/[image]:[tag]
-                                     # latest = toujours la dernière version
-                                     # Cette image est construite par Jenkins et poussée au registry
-        imagePullPolicy: IfNotPresent  # ⭐ IMPORTANTE: Politique de téléchargement de l'image
-                                       # IfNotPresent = Utilise l'image locale si elle existe
-                                       # Options: Always (toujours télécharger), Never, IfNotPresent
-                                       # IfNotPresent = économise la bande passante et le temps de démarrage
-        env:  # Variables d'environnement du container
+      - name: agri-backend
+        image: agri-backend:latest  # ⭐ Image Docker (construite par Jenkins)
+        imagePullPolicy: IfNotPresent
+        env:
         - name: SPRING_CONFIG_ADDITIONAL_LOCATION
-          value: "file:/vault/secrets/application.properties"  # ⭐ IMPORTANTE: Chemin du fichier de config injecté par Vault
-                                                                 # Vault écrit le fichier à ce chemin
-                                                                 # Spring Boot lit ce fichier au démarrage
+          value: "file:/vault/secrets/application.properties"  # ⭐ Config injectée par Vault
         ports:
-        - containerPort: 8080  # ⭐ IMPORTANTE: Port que le container expose
-                               # Spring Boot écoute sur port 8080 à l'intérieur du container
-                               # Le Service Kubernetes expose ce port au réseau
-        resources:  # Limiter l'utilisation des ressources du pod
+        - containerPort: 8080  # ⭐ Port Spring Boot
+        resources:
           limits:
-            memory: "512Mi"     # Maximum 512MB de mémoire
-            cpu: "500m"         # Maximum 500 millicores CPU
+            memory: "512Mi"
+            cpu: "500m"
           requests:
-            memory: "256Mi"     # Minimum demandé: 256MB
-            cpu: "250m"         # Minimum demandé: 250 millicores
-        # ⭐ HEALTH CHECKS (Kubernetes vérifie la santé du pod)
-        livenessProbe:  # Vérifie si le pod est vivant
+            memory: "256Mi"
+            cpu: "250m"
+        livenessProbe:  # ⭐ Redémarre le pod s'il n'est pas vivant
           httpGet:
-            path: /actuator/health  # Endpoint Spring Boot Actuator
+            path: /actuator/health
             port: 8080
-          initialDelaySeconds: 30  # Attendre 30s avant le premier check
-          periodSeconds: 10        # Vérifier toutes les 10s
-          timeoutSeconds: 5        # Timeout de 5s
-          failureThreshold: 3      # Redémarrer après 3 échecs
-        readinessProbe:  # Vérifie si le pod peut recevoir du trafic
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:  # ⭐ Route le trafic seulement si le pod est prêt
           httpGet:
             path: /actuator/health/readiness
             port: 8080
           initialDelaySeconds: 20
           periodSeconds: 5
-          timeoutSeconds: 3
-          failureThreshold: 2
 ---
-# ===== KUBERNETES SERVICE (RÉSEAU/NETWORKING) =====
-# ⭐ IMPORTANT: Service = Abstraction réseau qui expose les pods
-# Sans Service, personne ne peut accéder aux pods
+# Service expose le Deployment sur le réseau
 apiVersion: v1
-kind: Service  # Type de ressource: Service (expose les pods sur le réseau)
+kind: Service
 metadata:
-  name: agri-backend  # ⭐ Nom DNS: "agri-backend" dans le cluster
-                     # D'autres pods peuvent y accéder via: http://agri-backend:8080
+  name: agri-backend
 spec:
   selector:
-    app: agri-backend  # ⭐ IMPORTANTE: Service route le trafic aux pods avec ce label
-                       # Le Service découvre automatiquement tous les pods avec ce label
+    app: agri-backend  # ⭐ Route vers les pods avec ce label
   ports:
     - protocol: TCP
-      port: 8080        # ⭐ IMPORTANTE: Port externalisé (ce qu'on accède de l'extérieur du service)
-      targetPort: 8080  # ⭐ IMPORTANTE: Port du container (où le container écoute réellement)
-      name: http        # Nom du port (optionnel mais recommandé)
-  type: NodePort  # ⭐ IMPORTANTE: Type de Service
-                  # NodePort = expose sur un port de chaque nœud du cluster (exemple: 30123)
-                  # ClusterIP = accès seulement interne au cluster (défaut)
-                  # LoadBalancer = crée un load balancer externe (cloud)
+      port: 8080
+      targetPort: 8080
+  type: NodePort  # ⭐ Expose sur chaque nœud du cluster
